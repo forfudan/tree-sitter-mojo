@@ -1,0 +1,89 @@
+// **反引號名字出現在每一個讀名字的位置。** Mojo 的 `parseIdentifier` 第一句就收
+// `escaped_identifier`（`ParserBase.cpp:90`），所以「哪裏能寫名字，哪裏就能寫反引號」
+// ——模組路徑、結構名、參數名、import 進來的名字，這裏各釘一格。
+//
+// Warning: **`import .inner` 在 Mojo 那邊收得下、然後被一句診斷拒掉**
+// （`ParserStmts.cpp:3667`「relative imports must use 'from'」）。語法這一層只管形狀，
+// 所以照收；要改成拒收的話，`visibility_pkg/gateway.mojo` 那個真實檔就會紅。
+//
+// Warning: **`tree-sitter test -u` 會把這一段刪掉**（它只認 `===` 分隔的那些格）。
+
+================================================================================
+模組路徑的每一節都可以是反引號名字
+================================================================================
+
+import `dotted.pkg`.module
+from `renamed-package`.module import identity
+from test_package.module import `use()weird[]`
+
+--------------------------------------------------------------------------------
+
+(module
+  (import_statement
+    (dotted_name
+      (backtick_identifier)
+      (identifier)))
+  (import_from_statement
+    (dotted_name
+      (backtick_identifier)
+      (identifier))
+    (dotted_name
+      (identifier)))
+  (import_from_statement
+    (dotted_name
+      (identifier)
+      (identifier))
+    (dotted_name
+      (backtick_identifier))))
+
+================================================================================
+結構名與參數名的反引號
+================================================================================
+
+struct `weird()struct[]`(Movable where False):
+    pass
+
+def very_unique_func(`C-3PO`: Int) -> Int:
+    return 1
+
+--------------------------------------------------------------------------------
+
+(module
+  (struct_definition
+    (backtick_identifier)
+    (conformance_list
+      (conformance
+        (primary_expression
+          (identifier))
+        (where_clause
+          (primary_expression
+            (false)))))
+    (block
+      (pass_statement)))
+  (function_definition
+    (identifier)
+    (parameters
+      (parameter
+        (backtick_identifier)
+        (primary_expression
+          (identifier))))
+    (primary_expression
+      (identifier))
+    (block
+      (return_statement
+        (primary_expression
+          (integer))))))
+
+================================================================================
+import 收得下相對路徑
+================================================================================
+
+import .inner
+
+--------------------------------------------------------------------------------
+
+(module
+  (import_statement
+    (relative_import
+      (dotted_name
+        (identifier)))))

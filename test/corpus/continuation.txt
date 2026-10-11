@@ -1,0 +1,161 @@
+// **換行結不結束一句，由下一行的深度決定。** Mojo 的判準一行
+// （`ParserBase.h:198-211` 的 `isTokenInCurrentStatement`）：`tokIndent > stmtIndent`
+// 的下一行是**續行**。所以 `where`、`->`、下標都折得到下一行去，而這一條不在語法裏，
+// 在 `src/scanner.c` 末尾那一句 `depth <= here`。
+//
+// 第四格是那一句的反面，不許省：**同深的下一行仍然是新的一句**，所以 trait 裏那些
+// 無體的方法不會被前一個吃掉。這兩件事從前在語法那一層撞，只留得下一邊。
+//
+// Warning: **`tree-sitter test -u` 會把這一段刪掉**，而且不只刪 `--file-name` 點到的
+// 那個檔。要用 `-u` 就先跑、後補註釋。
+
+================================================================================
+where 折到下一行
+================================================================================
+
+def foldable_requires_1[x: Int]()
+    where x:
+        pass
+
+--------------------------------------------------------------------------------
+
+(module
+  (function_definition
+    (identifier)
+    (type_parameters
+      (parameter
+        (identifier)
+        (primary_expression
+          (identifier))))
+    (parameters)
+    (where_clauses
+      (where_clause
+        (primary_expression
+          (identifier))))
+    (block
+      (pass_statement))))
+
+================================================================================
+返回類型折到下一行
+================================================================================
+
+def parametricMut[o: Origin](a: Pointer[MemExample, o]._mlir_lit_ref)
+   -> Pointer[MemExample, o]._mlir_lit_ref:
+  return a
+
+--------------------------------------------------------------------------------
+
+(module
+  (function_definition
+    (identifier)
+    (type_parameters
+      (parameter
+        (identifier)
+        (primary_expression
+          (identifier))))
+    (parameters
+      (parameter
+        (identifier)
+        (primary_expression
+          (attribute
+            (primary_expression
+              (subscript
+                (primary_expression
+                  (identifier))
+                (primary_expression
+                  (identifier))
+                (primary_expression
+                  (identifier))))
+            (identifier)))))
+    (primary_expression
+      (attribute
+        (primary_expression
+          (subscript
+            (primary_expression
+              (identifier))
+            (primary_expression
+              (identifier))
+            (primary_expression
+              (identifier))))
+        (identifier)))
+    (block
+      (return_statement
+        (primary_expression
+          (identifier))))))
+
+================================================================================
+下標折到下一行
+================================================================================
+
+def f():
+  var rebind = __mlir_op.`kgen.rebind`
+    [_type=Pointer[Int, origin_of(s.b)]._mlir_lit_ref](litref)
+
+--------------------------------------------------------------------------------
+
+(module
+  (function_definition
+    (identifier)
+    (parameters)
+    (block
+      (assignment
+        (pattern
+          (identifier))
+        (primary_expression
+          (call
+            (primary_expression
+              (subscript
+                (primary_expression
+                  (attribute
+                    (primary_expression
+                      (identifier))
+                    (backtick_identifier)))
+                (keyword_argument
+                  (identifier)
+                  (primary_expression
+                    (attribute
+                      (primary_expression
+                        (subscript
+                          (primary_expression
+                            (identifier))
+                          (primary_expression
+                            (identifier))
+                          (primary_expression
+                            (call
+                              (primary_expression
+                                (identifier))
+                              (argument_list
+                                (primary_expression
+                                  (attribute
+                                    (primary_expression
+                                      (identifier))
+                                    (identifier))))))))
+                      (identifier))))))
+            (argument_list
+              (primary_expression
+                (identifier)))))))))
+
+================================================================================
+同深的下一行仍然是新的一句，trait 裏的無體方法沒被續行吃掉
+================================================================================
+
+trait T:
+    fn f(self)
+    fn g(self)
+
+--------------------------------------------------------------------------------
+
+(module
+  (trait_definition
+    (identifier)
+    (block
+      (function_definition
+        (identifier)
+        (parameters
+          (parameter
+            (identifier))))
+      (function_definition
+        (identifier)
+        (parameters
+          (parameter
+            (identifier)))))))

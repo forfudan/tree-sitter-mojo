@@ -1,0 +1,81 @@
+// **`__generator_type` 是「參數化的類型」那個字面量**（`ParserExprs.cpp:1452`）：
+// `__generator_type [方括號參數] 類型表達式`，造出來的是 `!lit.generator<<參數> 體>`。
+// 方括號可省，所以三格都要釘：帶參數、不帶參數、以及它最常出現的位置——
+// 當另一個函數的參數的類型（`std/builtin/variadics.mojo:181` 那一族）。
+//
+// Warning: **方括號在這個位置一定是參數表，不是列表字面量。** 兩種都讀得通，而 Mojo
+// 自己看見 `[` 就當參數表收（`parseParametersIfPresent`，一次都不回頭）；語法裏那句
+// 話寫成一條自己的 `_generator_parameters` 帶 `prec(1)`，外加 `conflicts` 裏兩對。
+//
+// Warning: **`tree-sitter test -u` 會把這一段刪掉**，而且**不只刪 `--file-name` 點到
+// 的那個檔**——它把讀過的每一個語料檔整份重寫一遍（2026-10-11 踩到：更新 `names.txt`
+// 的時候把這一段刪了）。要用 `-u` 就先跑、後補註釋。
+
+================================================================================
+__generator_type 帶參數表
+================================================================================
+
+comptime gen_idx_to_int = __generator_type[Idx: Int] Int
+
+--------------------------------------------------------------------------------
+
+(module
+  (assignment
+    (pattern
+      (identifier))
+    (primary_expression
+      (generator_type
+        (type_parameters
+          (parameter
+            (identifier)
+            (primary_expression
+              (identifier))))
+        (primary_expression
+          (identifier))))))
+
+================================================================================
+__generator_type 不帶參數表
+================================================================================
+
+comptime gen_empty = __generator_type Int
+
+--------------------------------------------------------------------------------
+
+(module
+  (assignment
+    (pattern
+      (identifier))
+    (primary_expression
+      (generator_type
+        (primary_expression
+          (identifier))))))
+
+================================================================================
+__generator_type 當參數的類型
+================================================================================
+
+def use_as_param_type[
+    Mapper: __generator_type[Idx: Int] Int
+]():
+    pass
+
+--------------------------------------------------------------------------------
+
+(module
+  (function_definition
+    (identifier)
+    (type_parameters
+      (parameter
+        (identifier)
+        (primary_expression
+          (generator_type
+            (type_parameters
+              (parameter
+                (identifier)
+                (primary_expression
+                  (identifier))))
+            (primary_expression
+              (identifier))))))
+    (parameters)
+    (block
+      (pass_statement))))

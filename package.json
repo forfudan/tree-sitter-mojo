@@ -1,0 +1,15 @@
+{
+  "name": "tree-sitter-mojo",
+  "version": "0.1.0",
+  "description": "Mojo grammar for tree-sitter",
+  "license": "Apache-2.0",
+  "main": "bindings/node",
+  "files": ["grammar.js", "src/**", "bindings/node/**"],
+  "devDependencies": {
+    "tree-sitter-cli": "^0.27.1"
+  },
+  "scripts": {
+    "generate": "tree-sitter generate",
+    "baseline": "script/baseline.sh --why"
+  }
+}

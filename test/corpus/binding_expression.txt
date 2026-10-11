@@ -1,0 +1,146 @@
+// **`var` 與 `ref` 是前綴運算符，與 `not`／`-`／`await` 同一族**
+// （`ParserExprs.cpp:510-511` 的 `switch`，優先級 `kVarRefPat`）。所以它們出現得了
+// 任何一個表達式的位置，前兩格釘的就是語料裏真有的那兩處：元組裏、關鍵字實參的值上。
+//
+// 第三格是反面：**語句開頭那個 `var` 仍然歸宣告**（樹上是 `assignment`，不是一個
+// `binding_expression` 的表達式語句）。`binding_pattern` 那個 `prec(-1)` 管的是這條。
+//
+// Warning: **`tree-sitter test -u` 會把這一段刪掉**，而且不只刪 `--file-name` 點到的
+// 那個檔。要用 `-u` 就先跑、後補註釋。
+
+================================================================================
+元組模式裏的 var 綁定
+================================================================================
+
+def f(point: Tuple[Int, Int]):
+    __match point:
+    case (var x, 0):
+        pass
+    case (0, var y):
+        pass
+
+--------------------------------------------------------------------------------
+
+(module
+  (function_definition
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (primary_expression
+          (subscript
+            (primary_expression
+              (identifier))
+            (primary_expression
+              (identifier))
+            (primary_expression
+              (identifier))))))
+    (block
+      (match_statement
+        (primary_expression
+          (identifier))
+        (case_clause
+          (primary_expression
+            (tuple
+              (primary_expression
+                (binding_expression
+                  (primary_expression
+                    (identifier))))
+              (primary_expression
+                (integer))))
+          (block
+            (pass_statement)))
+        (case_clause
+          (primary_expression
+            (tuple
+              (primary_expression
+                (integer))
+              (primary_expression
+                (binding_expression
+                  (primary_expression
+                    (identifier))))))
+          (block
+            (pass_statement)))))))
+
+================================================================================
+關鍵字實參的值可以是一個 var 綁定
+================================================================================
+
+def f(p: Point):
+    __match p:
+    case Point(x=var x, y=0):
+        pass
+    case Point(x=x, y=y):
+        pass
+
+--------------------------------------------------------------------------------
+
+(module
+  (function_definition
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (primary_expression
+          (identifier))))
+    (block
+      (match_statement
+        (primary_expression
+          (identifier))
+        (case_clause
+          (primary_expression
+            (call
+              (primary_expression
+                (identifier))
+              (argument_list
+                (keyword_argument
+                  (identifier)
+                  (primary_expression
+                    (binding_expression
+                      (primary_expression
+                        (identifier)))))
+                (keyword_argument
+                  (identifier)
+                  (primary_expression
+                    (integer))))))
+          (block
+            (pass_statement)))
+        (case_clause
+          (primary_expression
+            (call
+              (primary_expression
+                (identifier))
+              (argument_list
+                (keyword_argument
+                  (identifier)
+                  (primary_expression
+                    (identifier)))
+                (keyword_argument
+                  (identifier)
+                  (primary_expression
+                    (identifier))))))
+          (block
+            (pass_statement)))))))
+
+================================================================================
+語句開頭那個 var 仍然歸宣告
+================================================================================
+
+var x: Int = 1
+var y = 2
+
+--------------------------------------------------------------------------------
+
+(module
+  (assignment
+    (pattern
+      (identifier))
+    (primary_expression
+      (identifier))
+    (primary_expression
+      (integer)))
+  (assignment
+    (pattern
+      (identifier))
+    (primary_expression
+      (integer))))

@@ -1,0 +1,9 @@
+/node_modules/
+/target/
+/build/
+*.log
+
+# Warning: **`src/parser.c` 要進倉，不許忽略。** 它是生成物，可是 tree-sitter 全生態
+# 都把它提交——下游（yumete 的 CI、`cargo build`）靠它直接編，不必裝 CLI。忽略它等於
+# 要求每一臺構建機都裝 node 和 tree-sitter-cli。`src/scanner.c` 是手寫的，更要進。
+Cargo.lock

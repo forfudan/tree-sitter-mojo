@@ -1,0 +1,53 @@
+// 函數類型與 `raises` 上兩處語料裏各只有一例的形狀，各釘一格。
+// ① 不具名的參數寫成 `:類型`——`Signatures.cpp:361` 那一句
+// `if (p.consumeIf(Token::colon) || !name)`：名字可省，冒號照樣寫得出來。
+// ② 拋出類型放在括號裏。`thrown_type` 本來收得很窄（為了把 `raises {…}` 那個捕獲表
+// 留給捕獲表），括號不把 `{` 放回來，所以加得安全。
+//
+// Warning: **`tree-sitter test -u` 會把這一段刪掉**，而且不只刪 `--file-name` 點到的
+// 那個檔。要用 `-u` 就先跑、後補註釋。
+
+================================================================================
+函數類型的參數可以只寫 :類型
+================================================================================
+
+comptime IntToFloat32Type = def (:Int) thin -> FloatDyn
+
+--------------------------------------------------------------------------------
+
+(module
+  (assignment
+    (pattern
+      (identifier))
+    (primary_expression
+      (function_type
+        (parameters
+          (parameter
+            (primary_expression
+              (identifier))))
+        (effects)
+        (primary_expression
+          (identifier))))))
+
+================================================================================
+括號裏的拋出類型
+================================================================================
+
+def test_typed_raises_fn2() raises (Int) -> String:
+    pass
+
+--------------------------------------------------------------------------------
+
+(module
+  (function_definition
+    (identifier)
+    (parameters)
+    (effects
+      (raises_effect
+        (thrown_type
+          (primary_expression
+            (identifier)))))
+    (primary_expression
+      (identifier))
+    (block
+      (pass_statement))))

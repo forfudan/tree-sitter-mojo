@@ -1,0 +1,107 @@
+// **`__mlir_region` 是一條語句**（`TokenKinds.def:163`，產生式在
+// `ParserStmts.cpp:4278`），庫代碼裏真用着——`stdlib/std/builtin/_coroutine.mojo:37`
+// 那一段就是第一格原封不動抄下來的。它的實參只有 `名 : 類型` 一種形狀，沒有約定詞
+// 也沒有默認值（`ParserStmts.cpp:4306`：「MLIR operations don't have input
+// conventions」），所以它不借 `$.parameters`。
+//
+// Warning: **`tree-sitter test -u` 會把這一段刪掉**，而且不只刪 `--file-name` 點到的
+// 那個檔。要用 `-u` 就先跑、後補註釋。
+
+================================================================================
+__mlir_region 定義一個區域
+================================================================================
+
+def _suspend_async(body: Some[def(AnyCoroutine) -> None]):
+    __mlir_region await_body(hdl: __mlir_type.`!co.routine`):
+        body(hdl)
+        __mlir_op.`co.suspend.end`()
+
+    __mlir_op.`co.suspend`[_region="await_body".value]()
+
+--------------------------------------------------------------------------------
+
+(module
+  (function_definition
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (primary_expression
+          (subscript
+            (primary_expression
+              (identifier))
+            (primary_expression
+              (function_type
+                (parameters
+                  (parameter
+                    (identifier)))
+                (primary_expression
+                  (none))))))))
+    (block
+      (mlir_region_statement
+        (identifier)
+        (mlir_region_parameters
+          (mlir_region_parameter
+            (identifier)
+            (primary_expression
+              (attribute
+                (primary_expression
+                  (identifier))
+                (backtick_identifier)))))
+        (block
+          (expression_statement
+            (primary_expression
+              (call
+                (primary_expression
+                  (identifier))
+                (argument_list
+                  (primary_expression
+                    (identifier))))))
+          (expression_statement
+            (primary_expression
+              (call
+                (primary_expression
+                  (attribute
+                    (primary_expression
+                      (identifier))
+                    (backtick_identifier)))
+                (argument_list))))))
+      (expression_statement
+        (primary_expression
+          (call
+            (primary_expression
+              (subscript
+                (primary_expression
+                  (attribute
+                    (primary_expression
+                      (identifier))
+                    (backtick_identifier)))
+                (keyword_argument
+                  (identifier)
+                  (primary_expression
+                    (attribute
+                      (primary_expression
+                        (string))
+                      (identifier))))))
+            (argument_list)))))))
+
+================================================================================
+不帶實參的區域
+================================================================================
+
+def f():
+    __mlir_region body():
+        pass
+
+--------------------------------------------------------------------------------
+
+(module
+  (function_definition
+    (identifier)
+    (parameters)
+    (block
+      (mlir_region_statement
+        (identifier)
+        (mlir_region_parameters)
+        (block
+          (pass_statement))))))

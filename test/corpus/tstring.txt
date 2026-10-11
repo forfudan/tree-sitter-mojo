@@ -1,0 +1,112 @@
+// **t-string 的身體要數大括號的層數**，所以它歸外部掃描器
+// （`src/scanner.c` 的 `scan_t_string`，照 Mojo 的 `Lexer.cpp:528-915` 搬的）。
+// 這幾格釘的是正則數不出來的那幾種：插值裏同一種引號、t-string 套 t-string、
+// 括號裏換行之後的那一個、相鄰拼接，以及三引號。
+//
+// Warning: **這一族不能只看紅綠。** `t"a{"b"}"` 被內部詞法器收成兩個普通字串
+// （`t"a{` ＋ `b"}"`）的時候它們自己拼成一個 `concatenated_string`，**一個 ERROR
+// 都不出**。所以每一格的期望樹裏都要看見 `t_string` 那個節點名。
+//
+// Warning: **`tree-sitter test -u` 會把這一段刪掉**，而且不只刪 `--file-name` 點到的
+// 那個檔——它把讀過的每一個語料檔整份重寫。要用 `-u` 就先跑、後補註釋。
+
+================================================================================
+t-string 的插值裏可以有同一種引號
+================================================================================
+
+var s = t"hello {"world"}"
+
+--------------------------------------------------------------------------------
+
+(module
+  (assignment
+    (pattern
+      (identifier))
+    (primary_expression
+      (t_string))))
+
+================================================================================
+t-string 套 t-string，三層
+================================================================================
+
+var s = t"A {t"B {t"C {val2}"}"}"
+
+--------------------------------------------------------------------------------
+
+(module
+  (assignment
+    (pattern
+      (identifier))
+    (primary_expression
+      (t_string))))
+
+================================================================================
+括號裏換行之後的 t-string
+================================================================================
+
+@__name(
+    t"k{BM}_{"_cds" if c else ""}"
+)
+def f():
+    pass
+
+--------------------------------------------------------------------------------
+
+(module
+  (decorated_definition
+    (decorator
+      (primary_expression
+        (call
+          (primary_expression
+            (identifier))
+          (argument_list
+            (primary_expression
+              (t_string))))))
+    (function_definition
+      (identifier)
+      (parameters)
+      (block
+        (pass_statement)))))
+
+================================================================================
+相鄰的 t-string 拼起來
+================================================================================
+
+assert_equal(String(t"{x}" t"{y}"), "1020")
+
+--------------------------------------------------------------------------------
+
+(module
+  (expression_statement
+    (primary_expression
+      (call
+        (primary_expression
+          (identifier))
+        (argument_list
+          (primary_expression
+            (call
+              (primary_expression
+                (identifier))
+              (argument_list
+                (primary_expression
+                  (concatenated_string
+                    (t_string)
+                    (t_string))))))
+          (primary_expression
+            (string)))))))
+
+================================================================================
+三引號的 t-string 收得下換行
+================================================================================
+
+var s = t"""line {a}
+line {b}"""
+
+--------------------------------------------------------------------------------
+
+(module
+  (assignment
+    (pattern
+      (identifier))
+    (primary_expression
+      (t_string))))
