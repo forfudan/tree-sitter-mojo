@@ -13,8 +13,7 @@ fn g() raises -> Int:
     (parameters)
     (effects
       (raises_effect))
-    (primary_expression
-      (identifier))
+    (identifier)
     (block
       (pass_statement))))
 
@@ -40,8 +39,7 @@ def bar(mut b: Bencher) {ref} -> Int:
     (effects
       (abi_effect
         (string)))
-    (primary_expression
-      (identifier))
+    (identifier)
     (block
       (pass_statement)))
   (function_definition
@@ -56,12 +54,10 @@ def bar(mut b: Bencher) {ref} -> Int:
     (parameters
       (parameter
         (identifier)
-        (primary_expression
-          (identifier))))
+        (identifier)))
     (capture_list
       (capture_item))
-    (primary_expression
-      (identifier))
+    (identifier)
     (block
       (pass_statement))))
 
@@ -79,11 +75,9 @@ struct Foo(Movable where False):
     (identifier)
     (conformance_list
       (conformance
-        (primary_expression
-          (identifier))
+        (identifier)
         (where_clause
-          (primary_expression
-            (false)))))
+          (false))))
     (block
       (pass_statement))))
 
@@ -101,8 +95,7 @@ trait T2(Movable):
     (identifier)
     (conformance_list
       (conformance
-        (primary_expression
-          (identifier))))
+        (identifier)))
     (block
       (function_definition
         (identifier)

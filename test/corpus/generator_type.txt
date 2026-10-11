@@ -23,15 +23,12 @@ comptime gen_idx_to_int = __generator_type[Idx: Int] Int
   (assignment
     (pattern
       (identifier))
-    (primary_expression
-      (generator_type
-        (type_parameters
-          (parameter
-            (identifier)
-            (primary_expression
-              (identifier))))
-        (primary_expression
-          (identifier))))))
+    (generator_type
+      (type_parameters
+        (parameter
+          (identifier)
+          (identifier)))
+      (identifier))))
 
 ================================================================================
 __generator_type 不帶參數表
@@ -45,10 +42,8 @@ comptime gen_empty = __generator_type Int
   (assignment
     (pattern
       (identifier))
-    (primary_expression
-      (generator_type
-        (primary_expression
-          (identifier))))))
+    (generator_type
+      (identifier))))
 
 ================================================================================
 __generator_type 當參數的類型
@@ -67,15 +62,12 @@ def use_as_param_type[
     (type_parameters
       (parameter
         (identifier)
-        (primary_expression
-          (generator_type
-            (type_parameters
-              (parameter
-                (identifier)
-                (primary_expression
-                  (identifier))))
-            (primary_expression
-              (identifier))))))
+        (generator_type
+          (type_parameters
+            (parameter
+              (identifier)
+              (identifier)))
+          (identifier))))
     (parameters)
     (block
       (pass_statement))))

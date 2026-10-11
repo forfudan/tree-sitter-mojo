@@ -11,8 +11,7 @@ else:
 
 (module
   (if_statement
-    (primary_expression
-      (identifier))
+    (identifier)
     (block
       (pass_statement))
     (else_clause
@@ -37,8 +36,7 @@ finally:
     (block
       (pass_statement))
     (except_clause
-      (primary_expression
-        (identifier))
+      (identifier)
       (block
         (pass_statement)))
     (finally_clause
@@ -58,8 +56,7 @@ else:
 
 (module
   (while_statement
-    (primary_expression
-      (identifier))
+    (identifier)
     (block
       (pass_statement))
     (else_clause
@@ -81,8 +78,7 @@ else:
   (for_statement
     (pattern
       (identifier))
-    (primary_expression
-      (identifier))
+    (identifier)
     (block
       (pass_statement))
     (else_clause
@@ -103,12 +99,10 @@ else:
 
 (module
   (if_statement
-    (primary_expression
-      (identifier))
+    (identifier)
     (block
       (if_statement
-        (primary_expression
-          (identifier))
+        (identifier)
         (block
           (pass_statement))))
     (else_clause

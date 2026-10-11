@@ -17,7 +17,7 @@
 #define MAX_ALIAS_SEQUENCE_LENGTH 14
 #define MAX_RESERVED_WORD_SET_SIZE 0
 #define PRODUCTION_ID_COUNT 511
-#define SUPERTYPE_COUNT 0
+#define SUPERTYPE_COUNT 1
 
 enum ts_symbol_identifiers {
   sym_identifier = 1,
@@ -1605,8 +1605,9 @@ static const TSSymbolMetadata ts_symbol_metadata[] = {
     .named = true,
   },
   [sym_primary_expression] = {
-    .visible = true,
+    .visible = false,
     .named = true,
+    .supertype = true,
   },
   [sym_binary_operator] = {
     .visible = true,
@@ -10695,6 +10696,50 @@ static const TSStateId ts_primary_state_ids[STATE_COUNT] = {
   [5162] = 5129,
   [5163] = 5163,
   [5164] = 5153,
+};
+
+static const TSSymbol ts_supertype_symbols[SUPERTYPE_COUNT] = {
+  sym_primary_expression,
+};
+
+static const TSMapSlice ts_supertype_map_slices[] = {
+  [sym_primary_expression] = {.index = 0, .length = 32},
+};
+
+static const TSSymbol ts_supertype_map_entries[] = {
+  [0] =
+    sym_attribute,
+    sym_await_expression,
+    sym_backtick_identifier,
+    sym_binary_operator,
+    sym_binding_expression,
+    sym_call,
+    sym_comptime_expression,
+    sym_concatenated_string,
+    sym_dictionary,
+    sym_dictionary_comprehension,
+    sym_dot_member,
+    sym_ellipsis,
+    sym_false,
+    sym_float,
+    sym_function_type,
+    sym_generator_expression,
+    sym_generator_type,
+    sym_identifier,
+    sym_integer,
+    sym_list,
+    sym_list_comprehension,
+    sym_none,
+    sym_parenthesised_expression,
+    sym_set,
+    sym_set_comprehension,
+    sym_string,
+    sym_subscript,
+    sym_t_string,
+    sym_transfer,
+    sym_true,
+    sym_tuple,
+    sym_unary_operator,
 };
 
 static const TSCharacterRange sym_identifier_character_set_1[] = {
@@ -291699,6 +291744,9 @@ TS_PUBLIC const TSLanguage *tree_sitter_mojo(void) {
     .field_names = ts_field_names,
     .field_map_slices = ts_field_map_slices,
     .field_map_entries = ts_field_map_entries,
+    .supertype_map_slices = ts_supertype_map_slices,
+    .supertype_map_entries = ts_supertype_map_entries,
+    .supertype_symbols = ts_supertype_symbols,
     .symbol_metadata = ts_symbol_metadata,
     .public_symbol_map = ts_symbol_map,
     .alias_map = ts_non_terminal_alias_map,

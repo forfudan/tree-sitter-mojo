@@ -25,13 +25,11 @@ def foldable_requires_1[x: Int]()
     (type_parameters
       (parameter
         (identifier)
-        (primary_expression
-          (identifier))))
+        (identifier)))
     (parameters)
     (where_clauses
       (where_clause
-        (primary_expression
-          (identifier))))
+        (identifier)))
     (block
       (pass_statement))))
 
@@ -51,37 +49,25 @@ def parametricMut[o: Origin](a: Pointer[MemExample, o]._mlir_lit_ref)
     (type_parameters
       (parameter
         (identifier)
-        (primary_expression
-          (identifier))))
+        (identifier)))
     (parameters
       (parameter
         (identifier)
-        (primary_expression
-          (attribute
-            (primary_expression
-              (subscript
-                (primary_expression
-                  (identifier))
-                (primary_expression
-                  (identifier))
-                (primary_expression
-                  (identifier))))
-            (identifier)))))
-    (primary_expression
-      (attribute
-        (primary_expression
+        (attribute
           (subscript
-            (primary_expression
-              (identifier))
-            (primary_expression
-              (identifier))
-            (primary_expression
-              (identifier))))
-        (identifier)))
+            (identifier)
+            (identifier)
+            (identifier))
+          (identifier))))
+    (attribute
+      (subscript
+        (identifier)
+        (identifier)
+        (identifier))
+      (identifier))
     (block
       (return_statement
-        (primary_expression
-          (identifier))))))
+        (identifier)))))
 
 ================================================================================
 下標折到下一行
@@ -101,39 +87,26 @@ def f():
       (assignment
         (pattern
           (identifier))
-        (primary_expression
-          (call
-            (primary_expression
-              (subscript
-                (primary_expression
-                  (attribute
-                    (primary_expression
-                      (identifier))
-                    (backtick_identifier)))
-                (keyword_argument
+        (call
+          (subscript
+            (attribute
+              (identifier)
+              (backtick_identifier))
+            (keyword_argument
+              (identifier)
+              (attribute
+                (subscript
                   (identifier)
-                  (primary_expression
-                    (attribute
-                      (primary_expression
-                        (subscript
-                          (primary_expression
-                            (identifier))
-                          (primary_expression
-                            (identifier))
-                          (primary_expression
-                            (call
-                              (primary_expression
-                                (identifier))
-                              (argument_list
-                                (primary_expression
-                                  (attribute
-                                    (primary_expression
-                                      (identifier))
-                                    (identifier))))))))
-                      (identifier))))))
-            (argument_list
-              (primary_expression
-                (identifier)))))))))
+                  (identifier)
+                  (call
+                    (identifier)
+                    (argument_list
+                      (attribute
+                        (identifier)
+                        (identifier)))))
+                (identifier))))
+          (argument_list
+            (identifier)))))))
 
 ================================================================================
 同深的下一行仍然是新的一句，trait 裏的無體方法沒被續行吃掉
