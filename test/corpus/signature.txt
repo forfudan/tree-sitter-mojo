@@ -1,0 +1,111 @@
+================================================================================
+raises 在箭頭前面
+================================================================================
+
+fn g() raises -> Int:
+    pass
+
+--------------------------------------------------------------------------------
+
+(module
+  (function_definition
+    (identifier)
+    (parameters)
+    (effects
+      (raises_effect))
+    (primary_expression
+      (identifier))
+    (block
+      (pass_statement))))
+
+================================================================================
+abi 效果與捕獲表
+================================================================================
+
+def PyInit_m() abi("C") -> PythonObject:
+    pass
+
+def foo() {imm}:
+    pass
+
+def bar(mut b: Bencher) {ref} -> Int:
+    pass
+
+--------------------------------------------------------------------------------
+
+(module
+  (function_definition
+    (identifier)
+    (parameters)
+    (effects
+      (abi_effect
+        (string)))
+    (primary_expression
+      (identifier))
+    (block
+      (pass_statement)))
+  (function_definition
+    (identifier)
+    (parameters)
+    (capture_list
+      (capture_item))
+    (block
+      (pass_statement)))
+  (function_definition
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (primary_expression
+          (identifier))))
+    (capture_list
+      (capture_item))
+    (primary_expression
+      (identifier))
+    (block
+      (pass_statement))))
+
+================================================================================
+符合性列表裏的 where
+================================================================================
+
+struct Foo(Movable where False):
+    pass
+
+--------------------------------------------------------------------------------
+
+(module
+  (struct_definition
+    (identifier)
+    (conformance_list
+      (conformance
+        (primary_expression
+          (identifier))
+        (where_clause
+          (primary_expression
+            (false)))))
+    (block
+      (pass_statement))))
+
+================================================================================
+trait 裏的方法只有簽名
+================================================================================
+
+trait T2(Movable):
+    fn f(self)
+
+--------------------------------------------------------------------------------
+
+(module
+  (trait_definition
+    (identifier)
+    (conformance_list
+      (conformance
+        (primary_expression
+          (identifier))))
+    (block
+      (function_definition
+        (identifier)
+        (parameters
+          (parameter
+            (identifier)))))))

@@ -1,0 +1,17 @@
+{
+  "grammars": [
+    {
+      "name": "mojo",
+      "camelcase": "Mojo",
+      "scope": "source.mojo",
+      "path": ".",
+      "file-types": ["mojo", "🔥"],
+      "injection-regex": "^mojo$"
+    }
+  ],
+  "metadata": {
+    "version": "0.0.1",
+    "license": "Apache-2.0",
+    "description": "Mojo grammar for tree-sitter"
+  }
+}

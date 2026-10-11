@@ -1,0 +1,113 @@
+================================================================================
+comptime 綁定，帶不帶類型標註都行
+================================================================================
+
+comptime dtype = DType.float32
+comptime size: Int = rows * cols
+
+--------------------------------------------------------------------------------
+
+(module
+  (assignment
+    (pattern
+      (identifier))
+    (primary_expression
+      (attribute
+        (primary_expression
+          (identifier))
+        (identifier))))
+  (assignment
+    (pattern
+      (identifier))
+    (primary_expression
+      (identifier))
+    (primary_expression
+      (binary_operator
+        (primary_expression
+          (identifier))
+        (primary_expression
+          (identifier))))))
+
+================================================================================
+comptime if 與 comptime for
+================================================================================
+
+fn f():
+    comptime if size == 1:
+        pass
+    comptime for i in range(4):
+        pass
+
+--------------------------------------------------------------------------------
+
+(module
+  (function_definition
+    (identifier)
+    (parameters)
+    (block
+      (comptime_statement
+        (if_statement
+          (comparison_operator
+            (primary_expression
+              (identifier))
+            (primary_expression
+              (integer)))
+          (block
+            (pass_statement))))
+      (comptime_statement
+        (for_statement
+          (pattern
+            (identifier))
+          (primary_expression
+            (call
+              (primary_expression
+                (identifier))
+              (argument_list
+                (primary_expression
+                  (integer)))))
+          (block
+            (pass_statement)))))))
+
+================================================================================
+comptime 當前綴表達式，後面是括號
+================================================================================
+
+var b = comptime (nrm.method())
+
+--------------------------------------------------------------------------------
+
+(module
+  (assignment
+    (pattern
+      (identifier))
+    (primary_expression
+      (comptime_expression
+        (parenthesised_expression
+          (primary_expression
+            (call
+              (primary_expression
+                (attribute
+                  (primary_expression
+                    (identifier))
+                  (identifier)))
+              (argument_list))))))))
+
+================================================================================
+迴圈目標上的 ref 與 var
+================================================================================
+
+for ref x in y:
+    pass
+
+--------------------------------------------------------------------------------
+
+(module
+  (for_statement
+    (pattern
+      (binding_pattern
+        (pattern
+          (identifier))))
+    (primary_expression
+      (identifier))
+    (block
+      (pass_statement))))

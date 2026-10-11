@@ -1,0 +1,102 @@
+// **`:=` 是一個普通的中綴運算符**（`ParserExprs.cpp:281`，優先級 `kAssignExpr`、
+// 左結合），所以它左邊是一整個表達式，不是一個名字——語料裏成員與元組兩種都有。
+// 第三格釘的是它與三元式的鬆緊：`kAssignExpr` 排在 `kIfElse` 下面一級
+// （`ParserBase.h:255-258`），所以 `y := a if c else b` 是 `y := (a if c else b)`。
+//
+// Warning: **`tree-sitter test -u` 會把這一段刪掉**，而且不只刪 `--file-name` 點到的
+// 那個檔。要用 `-u` 就先跑、後補註釋。
+
+================================================================================
+海象的目標可以是成員
+================================================================================
+
+print(field.value := 1, field.overwrite())
+
+--------------------------------------------------------------------------------
+
+(module
+  (expression_statement
+    (primary_expression
+      (call
+        (primary_expression
+          (identifier))
+        (argument_list
+          (named_expression
+            (primary_expression
+              (attribute
+                (primary_expression
+                  (identifier))
+                (identifier)))
+            (primary_expression
+              (integer)))
+          (primary_expression
+            (call
+              (primary_expression
+                (attribute
+                  (primary_expression
+                    (identifier))
+                  (identifier)))
+              (argument_list))))))))
+
+================================================================================
+海象的目標可以是元組
+================================================================================
+
+use(((a, b) := Tuple(1, 2))[0])
+
+--------------------------------------------------------------------------------
+
+(module
+  (expression_statement
+    (primary_expression
+      (call
+        (primary_expression
+          (identifier))
+        (argument_list
+          (primary_expression
+            (subscript
+              (primary_expression
+                (parenthesised_expression
+                  (named_expression
+                    (primary_expression
+                      (tuple
+                        (primary_expression
+                          (identifier))
+                        (primary_expression
+                          (identifier))))
+                    (primary_expression
+                      (call
+                        (primary_expression
+                          (identifier))
+                        (argument_list
+                          (primary_expression
+                            (integer))
+                          (primary_expression
+                            (integer))))))))
+              (primary_expression
+                (integer)))))))))
+
+================================================================================
+海象比三元式鬆
+================================================================================
+
+x = (y := a if c else b)
+
+--------------------------------------------------------------------------------
+
+(module
+  (assignment
+    (pattern
+      (identifier))
+    (primary_expression
+      (parenthesised_expression
+        (named_expression
+          (primary_expression
+            (identifier))
+          (conditional_expression
+            (primary_expression
+              (identifier))
+            (primary_expression
+              (identifier))
+            (primary_expression
+              (identifier))))))))

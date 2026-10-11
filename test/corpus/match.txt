@@ -1,0 +1,163 @@
+// **`__match` 是 Mojo 自己那個模式匹配語句**（`TokenKinds.def:171`），不是 Python 的
+// `match`／`case`——那兩個詞 Mojo 的記號表裏沒有。產生式在
+// `ParserStmts.cpp:1557-1560` 的註釋裏，兩種縮進風格在 `1604-1607`。
+//
+// 前兩格釘的是那兩種風格：case 與 `__match` 同深（庫代碼走這一種，
+// `layout/tile_tensor.mojo:190`），以及 case 縮在裏面。第三格釘「模式後面那個 `if`
+// 是守衛」——Mojo 把模式的下限釘在 `kIfElse + 1` 就是為了這個，這一層靠
+// `_case_pattern` 的 `prec(PREC.conditional + 1)`。
+//
+// 第四格是反面：`__match` 仍然當得了函數名（`decls/keyword_fn_names.mojo:245` 真有
+// 這一行）。靠的是 tree-sitter 的 `word` 記號——那一格只收得下 `identifier`，關鍵字
+// 在那裏不合法，於是 `__match` 當場退回標識符。**加一個關鍵字就要補一格這樣的反面
+// 測試**，否則「某個名字從此不能用了」這一類回歸看不見。
+//
+// Warning: **`tree-sitter test -u` 會把這一段刪掉**，而且不只刪 `--file-name` 點到的
+// 那個檔。要用 `-u` 就先跑、後補註釋。
+
+================================================================================
+case 與 __match 同深（Mojo 式）
+================================================================================
+
+def f(slices: S):
+    __match slices[i]:
+    case .slice:
+        count += 1
+    case .index:
+        pass
+    return count
+
+--------------------------------------------------------------------------------
+
+(module
+  (function_definition
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (primary_expression
+          (identifier))))
+    (block
+      (match_statement
+        (primary_expression
+          (subscript
+            (primary_expression
+              (identifier))
+            (primary_expression
+              (identifier))))
+        (case_clause
+          (primary_expression
+            (dot_member
+              (identifier)))
+          (block
+            (augmented_assignment
+              (pattern
+                (identifier))
+              (primary_expression
+                (integer)))))
+        (case_clause
+          (primary_expression
+            (dot_member
+              (identifier)))
+          (block
+            (pass_statement))))
+      (return_statement
+        (primary_expression
+          (identifier))))))
+
+================================================================================
+case 縮在 __match 裏面（Python 式）
+================================================================================
+
+def f(x: Int):
+    __match x:
+        case 0:
+            pass
+        case _:
+            pass
+
+--------------------------------------------------------------------------------
+
+(module
+  (function_definition
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (primary_expression
+          (identifier))))
+    (block
+      (match_statement
+        (primary_expression
+          (identifier))
+        (case_clause
+          (primary_expression
+            (integer))
+          (block
+            (pass_statement)))
+        (case_clause
+          (primary_expression
+            (identifier))
+          (block
+            (pass_statement)))))))
+
+================================================================================
+模式後面那個 if 是守衛，不是三元式
+================================================================================
+
+def f(x: Int):
+    __match x:
+    case 1 | 2:
+        pass
+    case n if n < 0:
+        pass
+
+--------------------------------------------------------------------------------
+
+(module
+  (function_definition
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (primary_expression
+          (identifier))))
+    (block
+      (match_statement
+        (primary_expression
+          (identifier))
+        (case_clause
+          (primary_expression
+            (binary_operator
+              (primary_expression
+                (integer))
+              (primary_expression
+                (integer))))
+          (block
+            (pass_statement)))
+        (case_clause
+          (primary_expression
+            (identifier))
+          (comparison_operator
+            (primary_expression
+              (identifier))
+            (primary_expression
+              (integer)))
+          (block
+            (pass_statement)))))))
+
+================================================================================
+__match 還可以當函數名
+================================================================================
+
+def __match():
+    pass
+
+--------------------------------------------------------------------------------
+
+(module
+  (function_definition
+    (identifier)
+    (parameters)
+    (block
+      (pass_statement))))

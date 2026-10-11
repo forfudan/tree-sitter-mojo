@@ -1,0 +1,8 @@
+/node_modules/
+/target/
+/build/
+*.log
+
+# src/parser.c 是生成物，但要提交：下游 `cargo build` 直接編它，不必裝 node 和
+# tree-sitter-cli。src/scanner.c 是手寫的。
+Cargo.lock

@@ -1,0 +1,116 @@
+================================================================================
+if 的 else 子句與 if 同深
+================================================================================
+
+if a:
+    pass
+else:
+    pass
+
+--------------------------------------------------------------------------------
+
+(module
+  (if_statement
+    (primary_expression
+      (identifier))
+    (block
+      (pass_statement))
+    (else_clause
+      (block
+        (pass_statement)))))
+
+================================================================================
+try 的 except 與 finally 子句與 try 同深
+================================================================================
+
+try:
+    pass
+except e:
+    pass
+finally:
+    pass
+
+--------------------------------------------------------------------------------
+
+(module
+  (try_statement
+    (block
+      (pass_statement))
+    (except_clause
+      (primary_expression
+        (identifier))
+      (block
+        (pass_statement)))
+    (finally_clause
+      (block
+        (pass_statement)))))
+
+================================================================================
+while 的 else 子句
+================================================================================
+
+while a:
+    pass
+else:
+    pass
+
+--------------------------------------------------------------------------------
+
+(module
+  (while_statement
+    (primary_expression
+      (identifier))
+    (block
+      (pass_statement))
+    (else_clause
+      (block
+        (pass_statement)))))
+
+================================================================================
+for 的 else 子句
+================================================================================
+
+for x in y:
+    pass
+else:
+    pass
+
+--------------------------------------------------------------------------------
+
+(module
+  (for_statement
+    (pattern
+      (identifier))
+    (primary_expression
+      (identifier))
+    (block
+      (pass_statement))
+    (else_clause
+      (block
+        (pass_statement)))))
+
+================================================================================
+一個換行收回兩層
+================================================================================
+
+if a:
+    if b:
+        pass
+else:
+    pass
+
+--------------------------------------------------------------------------------
+
+(module
+  (if_statement
+    (primary_expression
+      (identifier))
+    (block
+      (if_statement
+        (primary_expression
+          (identifier))
+        (block
+          (pass_statement))))
+    (else_clause
+      (block
+        (pass_statement)))))
