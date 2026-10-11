@@ -50,6 +50,18 @@ module.exports = grammar({
   // 大括號的層數，正則數不了；理由與縮進同一個，所以歸同一支掃描器。
   externals: ($) => [$._newline, $._indent, $._dedent, $.t_string],
 
+  // **`primary_expression` 是一個上位類型，不是樹上的一個節點**（2026-10-11）。
+  //
+  // 它是一條純 `choice`，三十幾個分支全是具名規則——不宣告的話每一個表達式外面
+  // 都多裹一層 `(primary_expression …)`：樹大了一倍，而下游每一條查詢都要為它
+  // 多寫一級（`(conformance (identifier))` 寫不出來，得寫
+  // `(conformance (primary_expression (identifier)))`）。宣告之後它從樹上消失，
+  // 而 `node-types.json` 照樣說得出它有哪些子類型。`tree-sitter-python` 對同名
+  // 的那條規則也是這麼宣告的。
+  //
+  // Warning: **這不改解析，只改可見性**——基準數字一個都不動。
+  supertypes: ($) => [$.primary_expression],
+
   // 空白與註釋在任何兩個記號之間都可以出現，所以歸 `extras`，不往規則裏寫。
   // Warning: **換行不在這裏。** 它是語句的結束，是語法的一部分。
   // Warning: **換行也在這裏，而它同時是語句的結束。** 兩件事不矛盾：外部掃描器永遠

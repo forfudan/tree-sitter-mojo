@@ -35,35 +35,27 @@ def f(slices: S):
     (parameters
       (parameter
         (identifier)
-        (primary_expression
-          (identifier))))
+        (identifier)))
     (block
       (match_statement
-        (primary_expression
-          (subscript
-            (primary_expression
-              (identifier))
-            (primary_expression
-              (identifier))))
+        (subscript
+          (identifier)
+          (identifier))
         (case_clause
-          (primary_expression
-            (dot_member
-              (identifier)))
+          (dot_member
+            (identifier))
           (block
             (augmented_assignment
               (pattern
                 (identifier))
-              (primary_expression
-                (integer)))))
+              (integer))))
         (case_clause
-          (primary_expression
-            (dot_member
-              (identifier)))
+          (dot_member
+            (identifier))
           (block
             (pass_statement))))
       (return_statement
-        (primary_expression
-          (identifier))))))
+        (identifier)))))
 
 ================================================================================
 case 縮在 __match 裏面（Python 式）
@@ -84,20 +76,16 @@ def f(x: Int):
     (parameters
       (parameter
         (identifier)
-        (primary_expression
-          (identifier))))
+        (identifier)))
     (block
       (match_statement
-        (primary_expression
-          (identifier))
+        (identifier)
         (case_clause
-          (primary_expression
-            (integer))
+          (integer)
           (block
             (pass_statement)))
         (case_clause
-          (primary_expression
-            (identifier))
+          (identifier)
           (block
             (pass_statement)))))))
 
@@ -120,29 +108,21 @@ def f(x: Int):
     (parameters
       (parameter
         (identifier)
-        (primary_expression
-          (identifier))))
+        (identifier)))
     (block
       (match_statement
-        (primary_expression
-          (identifier))
+        (identifier)
         (case_clause
-          (primary_expression
-            (binary_operator
-              (primary_expression
-                (integer))
-              (primary_expression
-                (integer))))
+          (binary_operator
+            (integer)
+            (integer))
           (block
             (pass_statement)))
         (case_clause
-          (primary_expression
-            (identifier))
+          (identifier)
           (comparison_operator
-            (primary_expression
-              (identifier))
-            (primary_expression
-              (integer)))
+            (identifier)
+            (integer))
           (block
             (pass_statement)))))))
 

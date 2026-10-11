@@ -53,11 +53,9 @@ def very_unique_func(`C-3PO`: Int) -> Int:
     (backtick_identifier)
     (conformance_list
       (conformance
-        (primary_expression
-          (identifier))
+        (identifier)
         (where_clause
-          (primary_expression
-            (false)))))
+          (false))))
     (block
       (pass_statement)))
   (function_definition
@@ -65,14 +63,11 @@ def very_unique_func(`C-3PO`: Int) -> Int:
     (parameters
       (parameter
         (backtick_identifier)
-        (primary_expression
-          (identifier))))
-    (primary_expression
-      (identifier))
+        (identifier)))
+    (identifier)
     (block
       (return_statement
-        (primary_expression
-          (integer))))))
+        (integer)))))
 
 ================================================================================
 import 收得下相對路徑

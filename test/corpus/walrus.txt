@@ -16,27 +16,19 @@ print(field.value := 1, field.overwrite())
 
 (module
   (expression_statement
-    (primary_expression
-      (call
-        (primary_expression
-          (identifier))
-        (argument_list
-          (named_expression
-            (primary_expression
-              (attribute
-                (primary_expression
-                  (identifier))
-                (identifier)))
-            (primary_expression
-              (integer)))
-          (primary_expression
-            (call
-              (primary_expression
-                (attribute
-                  (primary_expression
-                    (identifier))
-                  (identifier)))
-              (argument_list))))))))
+    (call
+      (identifier)
+      (argument_list
+        (named_expression
+          (attribute
+            (identifier)
+            (identifier))
+          (integer))
+        (call
+          (attribute
+            (identifier)
+            (identifier))
+          (argument_list))))))
 
 ================================================================================
 海象的目標可以是元組
@@ -48,33 +40,21 @@ use(((a, b) := Tuple(1, 2))[0])
 
 (module
   (expression_statement
-    (primary_expression
-      (call
-        (primary_expression
-          (identifier))
-        (argument_list
-          (primary_expression
-            (subscript
-              (primary_expression
-                (parenthesised_expression
-                  (named_expression
-                    (primary_expression
-                      (tuple
-                        (primary_expression
-                          (identifier))
-                        (primary_expression
-                          (identifier))))
-                    (primary_expression
-                      (call
-                        (primary_expression
-                          (identifier))
-                        (argument_list
-                          (primary_expression
-                            (integer))
-                          (primary_expression
-                            (integer))))))))
-              (primary_expression
-                (integer)))))))))
+    (call
+      (identifier)
+      (argument_list
+        (subscript
+          (parenthesised_expression
+            (named_expression
+              (tuple
+                (identifier)
+                (identifier))
+              (call
+                (identifier)
+                (argument_list
+                  (integer)
+                  (integer)))))
+          (integer))))))
 
 ================================================================================
 海象比三元式鬆
@@ -88,15 +68,10 @@ x = (y := a if c else b)
   (assignment
     (pattern
       (identifier))
-    (primary_expression
-      (parenthesised_expression
-        (named_expression
-          (primary_expression
-            (identifier))
-          (conditional_expression
-            (primary_expression
-              (identifier))
-            (primary_expression
-              (identifier))
-            (primary_expression
-              (identifier))))))))
+    (parenthesised_expression
+      (named_expression
+        (identifier)
+        (conditional_expression
+          (identifier)
+          (identifier)
+          (identifier))))))

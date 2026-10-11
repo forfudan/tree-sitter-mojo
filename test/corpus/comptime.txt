@@ -11,22 +11,16 @@ comptime size: Int = rows * cols
   (assignment
     (pattern
       (identifier))
-    (primary_expression
-      (attribute
-        (primary_expression
-          (identifier))
-        (identifier))))
+    (attribute
+      (identifier)
+      (identifier)))
   (assignment
     (pattern
       (identifier))
-    (primary_expression
-      (identifier))
-    (primary_expression
-      (binary_operator
-        (primary_expression
-          (identifier))
-        (primary_expression
-          (identifier))))))
+    (identifier)
+    (binary_operator
+      (identifier)
+      (identifier))))
 
 ================================================================================
 comptime if 與 comptime for
@@ -48,23 +42,18 @@ fn f():
       (comptime_statement
         (if_statement
           (comparison_operator
-            (primary_expression
-              (identifier))
-            (primary_expression
-              (integer)))
+            (identifier)
+            (integer))
           (block
             (pass_statement))))
       (comptime_statement
         (for_statement
           (pattern
             (identifier))
-          (primary_expression
-            (call
-              (primary_expression
-                (identifier))
-              (argument_list
-                (primary_expression
-                  (integer)))))
+          (call
+            (identifier)
+            (argument_list
+              (integer)))
           (block
             (pass_statement)))))))
 
@@ -80,17 +69,13 @@ var b = comptime (nrm.method())
   (assignment
     (pattern
       (identifier))
-    (primary_expression
-      (comptime_expression
-        (parenthesised_expression
-          (primary_expression
-            (call
-              (primary_expression
-                (attribute
-                  (primary_expression
-                    (identifier))
-                  (identifier)))
-              (argument_list))))))))
+    (comptime_expression
+      (parenthesised_expression
+        (call
+          (attribute
+            (identifier)
+            (identifier))
+          (argument_list))))))
 
 ================================================================================
 迴圈目標上的 ref 與 var
@@ -107,7 +92,6 @@ for ref x in y:
       (binding_pattern
         (pattern
           (identifier))))
-    (primary_expression
-      (identifier))
+    (identifier)
     (block
       (pass_statement))))

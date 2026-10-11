@@ -27,38 +27,25 @@ def f(point: Tuple[Int, Int]):
     (parameters
       (parameter
         (identifier)
-        (primary_expression
-          (subscript
-            (primary_expression
-              (identifier))
-            (primary_expression
-              (identifier))
-            (primary_expression
-              (identifier))))))
+        (subscript
+          (identifier)
+          (identifier)
+          (identifier))))
     (block
       (match_statement
-        (primary_expression
-          (identifier))
+        (identifier)
         (case_clause
-          (primary_expression
-            (tuple
-              (primary_expression
-                (binding_expression
-                  (primary_expression
-                    (identifier))))
-              (primary_expression
-                (integer))))
+          (tuple
+            (binding_expression
+              (identifier))
+            (integer))
           (block
             (pass_statement)))
         (case_clause
-          (primary_expression
-            (tuple
-              (primary_expression
-                (integer))
-              (primary_expression
-                (binding_expression
-                  (primary_expression
-                    (identifier))))))
+          (tuple
+            (integer)
+            (binding_expression
+              (identifier)))
           (block
             (pass_statement)))))))
 
@@ -81,44 +68,33 @@ def f(p: Point):
     (parameters
       (parameter
         (identifier)
-        (primary_expression
-          (identifier))))
+        (identifier)))
     (block
       (match_statement
-        (primary_expression
-          (identifier))
+        (identifier)
         (case_clause
-          (primary_expression
-            (call
-              (primary_expression
-                (identifier))
-              (argument_list
-                (keyword_argument
-                  (identifier)
-                  (primary_expression
-                    (binding_expression
-                      (primary_expression
-                        (identifier)))))
-                (keyword_argument
-                  (identifier)
-                  (primary_expression
-                    (integer))))))
+          (call
+            (identifier)
+            (argument_list
+              (keyword_argument
+                (identifier)
+                (binding_expression
+                  (identifier)))
+              (keyword_argument
+                (identifier)
+                (integer))))
           (block
             (pass_statement)))
         (case_clause
-          (primary_expression
-            (call
-              (primary_expression
+          (call
+            (identifier)
+            (argument_list
+              (keyword_argument
+                (identifier)
                 (identifier))
-              (argument_list
-                (keyword_argument
-                  (identifier)
-                  (primary_expression
-                    (identifier)))
-                (keyword_argument
-                  (identifier)
-                  (primary_expression
-                    (identifier))))))
+              (keyword_argument
+                (identifier)
+                (identifier))))
           (block
             (pass_statement)))))))
 
@@ -135,12 +111,9 @@ var y = 2
   (assignment
     (pattern
       (identifier))
-    (primary_expression
-      (identifier))
-    (primary_expression
-      (integer)))
+    (identifier)
+    (integer))
   (assignment
     (pattern
       (identifier))
-    (primary_expression
-      (integer))))
+    (integer)))

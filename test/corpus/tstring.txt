@@ -22,8 +22,7 @@ var s = t"hello {"world"}"
   (assignment
     (pattern
       (identifier))
-    (primary_expression
-      (t_string))))
+    (t_string)))
 
 ================================================================================
 t-string 套 t-string，三層
@@ -37,8 +36,7 @@ var s = t"A {t"B {t"C {val2}"}"}"
   (assignment
     (pattern
       (identifier))
-    (primary_expression
-      (t_string))))
+    (t_string)))
 
 ================================================================================
 括號裏換行之後的 t-string
@@ -55,13 +53,10 @@ def f():
 (module
   (decorated_definition
     (decorator
-      (primary_expression
-        (call
-          (primary_expression
-            (identifier))
-          (argument_list
-            (primary_expression
-              (t_string))))))
+      (call
+        (identifier)
+        (argument_list
+          (t_string))))
     (function_definition
       (identifier)
       (parameters)
@@ -78,22 +73,16 @@ assert_equal(String(t"{x}" t"{y}"), "1020")
 
 (module
   (expression_statement
-    (primary_expression
-      (call
-        (primary_expression
-          (identifier))
-        (argument_list
-          (primary_expression
-            (call
-              (primary_expression
-                (identifier))
-              (argument_list
-                (primary_expression
-                  (concatenated_string
-                    (t_string)
-                    (t_string))))))
-          (primary_expression
-            (string)))))))
+    (call
+      (identifier)
+      (argument_list
+        (call
+          (identifier)
+          (argument_list
+            (concatenated_string
+              (t_string)
+              (t_string))))
+        (string)))))
 
 ================================================================================
 三引號的 t-string 收得下換行
@@ -108,5 +97,4 @@ line {b}"""
   (assignment
     (pattern
       (identifier))
-    (primary_expression
-      (t_string))))
+    (t_string)))

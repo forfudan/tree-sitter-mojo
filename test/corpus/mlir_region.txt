@@ -26,64 +26,46 @@ def _suspend_async(body: Some[def(AnyCoroutine) -> None]):
     (parameters
       (parameter
         (identifier)
-        (primary_expression
-          (subscript
-            (primary_expression
-              (identifier))
-            (primary_expression
-              (function_type
-                (parameters
-                  (parameter
-                    (identifier)))
-                (primary_expression
-                  (none))))))))
+        (subscript
+          (identifier)
+          (function_type
+            (parameters
+              (parameter
+                (identifier)))
+            (none)))))
     (block
       (mlir_region_statement
         (identifier)
         (mlir_region_parameters
           (mlir_region_parameter
             (identifier)
-            (primary_expression
-              (attribute
-                (primary_expression
-                  (identifier))
-                (backtick_identifier)))))
+            (attribute
+              (identifier)
+              (backtick_identifier))))
         (block
           (expression_statement
-            (primary_expression
-              (call
-                (primary_expression
-                  (identifier))
-                (argument_list
-                  (primary_expression
-                    (identifier))))))
+            (call
+              (identifier)
+              (argument_list
+                (identifier))))
           (expression_statement
-            (primary_expression
-              (call
-                (primary_expression
-                  (attribute
-                    (primary_expression
-                      (identifier))
-                    (backtick_identifier)))
-                (argument_list))))))
+            (call
+              (attribute
+                (identifier)
+                (backtick_identifier))
+              (argument_list)))))
       (expression_statement
-        (primary_expression
-          (call
-            (primary_expression
-              (subscript
-                (primary_expression
-                  (attribute
-                    (primary_expression
-                      (identifier))
-                    (backtick_identifier)))
-                (keyword_argument
-                  (identifier)
-                  (primary_expression
-                    (attribute
-                      (primary_expression
-                        (string))
-                      (identifier))))))
-            (argument_list)))))))
+        (call
+          (subscript
+            (attribute
+              (identifier)
+              (backtick_identifier))
+            (keyword_argument
+              (identifier)
+              (attribute
+                (string)
+                (identifier))))
+          (argument_list))))))
 
 ================================================================================
 不帶實參的區域

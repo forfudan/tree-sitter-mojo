@@ -19,15 +19,12 @@ comptime IntToFloat32Type = def (:Int) thin -> FloatDyn
   (assignment
     (pattern
       (identifier))
-    (primary_expression
-      (function_type
-        (parameters
-          (parameter
-            (primary_expression
-              (identifier))))
-        (effects)
-        (primary_expression
-          (identifier))))))
+    (function_type
+      (parameters
+        (parameter
+          (identifier)))
+      (effects)
+      (identifier))))
 
 ================================================================================
 括號裏的拋出類型
@@ -45,9 +42,7 @@ def test_typed_raises_fn2() raises (Int) -> String:
     (effects
       (raises_effect
         (thrown_type
-          (primary_expression
-            (identifier)))))
-    (primary_expression
-      (identifier))
+          (identifier))))
+    (identifier)
     (block
       (pass_statement))))
