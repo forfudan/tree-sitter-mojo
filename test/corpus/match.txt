@@ -1,19 +1,30 @@
-// **`__match` 是 Mojo 自己那個模式匹配語句**（`TokenKinds.def:171`），不是 Python 的
-// `match`／`case`——那兩個詞 Mojo 的記號表裏沒有。產生式在
-// `ParserStmts.cpp:1557-1560` 的註釋裏，兩種縮進風格在 `1604-1607`。
+// **`match` is Mojo's pattern-matching statement**, a keyword since 1.2, with
+// `__match` kept as its deprecated spelling (`TokenKinds.def:137,171` at
+// `mojo/v1.2.0`). It is not Python's `match`. The production is the comment
+// above `parseMatchStmt` (`ParserStmts.cpp:1693-1695`), and the two indentation
+// styles are named at `1766-1767`.
 //
-// 前兩格釘的是那兩種風格：case 與 `__match` 同深（庫代碼走這一種，
-// `layout/tile_tensor.mojo:190`），以及 case 縮在裏面。第三格釘「模式後面那個 `if`
-// 是守衛」——Mojo 把模式的下限釘在 `kIfElse + 1` 就是為了這個，這一層靠
-// `_case_pattern` 的 `prec(PREC.conditional + 1)`。
+// The first two cases pin those styles: cases level with the `match` (Mojo
+// style; 133 statements in the 1.2 sources, nearly all in tests) and cases
+// indented beneath it (Python style; 316 statements, and what the library
+// writes). The third pins "the `if` after a pattern is a guard": Mojo stops the
+// pattern at `if`, and this grammar does it with the `prec(PREC.conditional + 1)`
+// on `_case_pattern`.
 //
-// 第四格是反面：`__match` 仍然當得了函數名（`decls/keyword_fn_names.mojo:245` 真有
-// 這一行）。靠的是 tree-sitter 的 `word` 記號——那一格只收得下 `identifier`，關鍵字
-// 在那裏不合法，於是 `__match` 當場退回標識符。**加一個關鍵字就要補一格這樣的反面
-// 測試**，否則「某個名字從此不能用了」這一類回歸看不見。
+// The fourth is the negative one: a keyword still parses where only a name
+// fits. Mojo rejects `def __match():` with a diagnostic ("cannot be used as a
+// function name in this context", `decls/keyword_fn_names.mojo:252-253`), but
+// that is a check after parsing, and the grammar should not turn it into an
+// ERROR. It holds because of the `word` token: a keyword that is not valid in
+// that state falls back to an identifier. **Every new keyword wants a case like
+// this**, or "this name can no longer be used" regressions go unseen.
 //
-// Warning: **`tree-sitter test -u` 會把這一段刪掉**，而且不只刪 `--file-name` 點到的
-// 那個檔。要用 `-u` 就先跑、後補註釋。
+// The rest are the 1.2 additions: bare `match`, `comptime match`, comma lists
+// for the subject and the pattern, `*rest`, `as` as a pattern operator, and the
+// prefix `==`.
+//
+// Warning: **`tree-sitter test -u` deletes this header**, and not only in the
+// file `--file-name` names. Run `-u` first and write the comments after.
 
 ================================================================================
 case 與 __match 同深（Mojo 式）
@@ -131,6 +142,345 @@ __match 還可以當函數名
 ================================================================================
 
 def __match():
+    pass
+
+--------------------------------------------------------------------------------
+
+(module
+  (function_definition
+    (identifier)
+    (parameters)
+    (block
+      (pass_statement))))
+
+================================================================================
+match without the underscores, cases indented
+================================================================================
+
+def f(x: Int) -> String:
+    match x:
+        case 0:
+            return "zero"
+        case 1 | 2:
+            return "small"
+        case _:
+            return "many"
+
+--------------------------------------------------------------------------------
+
+(module
+  (function_definition
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (identifier)))
+    (identifier)
+    (block
+      (match_statement
+        (identifier)
+        (case_clause
+          (integer)
+          (block
+            (return_statement
+              (string))))
+        (case_clause
+          (binary_operator
+            (integer)
+            (integer))
+          (block
+            (return_statement
+              (string))))
+        (case_clause
+          (identifier)
+          (block
+            (return_statement
+              (string))))))))
+
+================================================================================
+match with level cases, followed by a statement
+================================================================================
+
+def f(x: Int):
+    match x:
+    case 0:
+        pass
+    case _:
+        pass
+    return
+
+--------------------------------------------------------------------------------
+
+(module
+  (function_definition
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (identifier)))
+    (block
+      (match_statement
+        (identifier)
+        (case_clause
+          (integer)
+          (block
+            (pass_statement)))
+        (case_clause
+          (identifier)
+          (block
+            (pass_statement))))
+      (return_statement))))
+
+================================================================================
+comptime match, and the old spelling behind comptime
+================================================================================
+
+def f[n: Int]():
+    comptime match n:
+        case 0:
+            pass
+        case _:
+            pass
+    comptime __match n:
+    case 1:
+        pass
+
+--------------------------------------------------------------------------------
+
+(module
+  (function_definition
+    (identifier)
+    (type_parameters
+      (parameter
+        (identifier)
+        (identifier)))
+    (parameters)
+    (block
+      (comptime_statement
+        (match_statement
+          (identifier)
+          (case_clause
+            (integer)
+            (block
+              (pass_statement)))
+          (case_clause
+            (identifier)
+            (block
+              (pass_statement)))))
+      (comptime_statement
+        (match_statement
+          (identifier)
+          (case_clause
+            (integer)
+            (block
+              (pass_statement))))))))
+
+================================================================================
+A comma list as the subject and as the pattern
+================================================================================
+
+def f(a: Int, b: Int):
+    match a, b:
+        case 1, 2:
+            pass
+        case _, (5, 6):
+            pass
+        case x, 6,:
+            pass
+
+--------------------------------------------------------------------------------
+
+(module
+  (function_definition
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (identifier))
+      (parameter
+        (identifier)
+        (identifier)))
+    (block
+      (match_statement
+        (expression_list
+          (identifier)
+          (identifier))
+        (case_clause
+          (expression_list
+            (integer)
+            (integer))
+          (block
+            (pass_statement)))
+        (case_clause
+          (expression_list
+            (identifier)
+            (tuple
+              (integer)
+              (integer)))
+          (block
+            (pass_statement)))
+        (case_clause
+          (expression_list
+            (identifier)
+            (integer))
+          (block
+            (pass_statement)))))))
+
+================================================================================
+*rest inside a list pattern and at the top of a case
+================================================================================
+
+def f(xs: List[Int]):
+    match xs:
+        case [first, *rest]:
+            pass
+        case [1, *middle, last]:
+            pass
+        case head, *tail:
+            pass
+
+--------------------------------------------------------------------------------
+
+(module
+  (function_definition
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (subscript
+          (identifier)
+          (identifier))))
+    (block
+      (match_statement
+        (identifier)
+        (case_clause
+          (list
+            (identifier)
+            (splat_argument
+              (identifier)))
+          (block
+            (pass_statement)))
+        (case_clause
+          (list
+            (integer)
+            (splat_argument
+              (identifier))
+            (identifier))
+          (block
+            (pass_statement)))
+        (case_clause
+          (expression_list
+            (identifier)
+            (splat_argument
+              (identifier)))
+          (block
+            (pass_statement)))))))
+
+================================================================================
+as binds a whole pattern or a nested one
+================================================================================
+
+def f(p: Point):
+    match p:
+        case (0, 0) as origin:
+            pass
+        case [cmd, (1 | 2) as d]:
+            pass
+        case _ as s if s.x > 0:
+            pass
+
+--------------------------------------------------------------------------------
+
+(module
+  (function_definition
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (identifier)))
+    (block
+      (match_statement
+        (identifier)
+        (case_clause
+          (as_pattern
+            (tuple
+              (integer)
+              (integer))
+            (identifier))
+          (block
+            (pass_statement)))
+        (case_clause
+          (list
+            (identifier)
+            (as_pattern
+              (parenthesised_expression
+                (binary_operator
+                  (integer)
+                  (integer)))
+              (identifier)))
+          (block
+            (pass_statement)))
+        (case_clause
+          (as_pattern
+            (identifier)
+            (identifier))
+          (comparison_operator
+            (attribute
+              (identifier)
+              (identifier))
+            (integer))
+          (block
+            (pass_statement)))))))
+
+================================================================================
+A prefix == matches by equality
+================================================================================
+
+def f[T: AnyType]():
+    comptime match T:
+        case == Int:
+            pass
+        case == (String(Self.RUN.handle)):
+            pass
+
+--------------------------------------------------------------------------------
+
+(module
+  (function_definition
+    (identifier)
+    (type_parameters
+      (parameter
+        (identifier)
+        (identifier)))
+    (parameters)
+    (block
+      (comptime_statement
+        (match_statement
+          (identifier)
+          (case_clause
+            (unary_operator
+              (identifier))
+            (block
+              (pass_statement)))
+          (case_clause
+            (unary_operator
+              (parenthesised_expression
+                (call
+                  (identifier)
+                  (argument_list
+                    (attribute
+                      (attribute
+                        (identifier)
+                        (identifier))
+                      (identifier))))))
+            (block
+              (pass_statement))))))))
+
+================================================================================
+match is a name where only a name fits
+================================================================================
+
+def match():
     pass
 
 --------------------------------------------------------------------------------

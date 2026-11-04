@@ -10,6 +10,9 @@
 ; plain rule matches the same node a second time — two captures of one range,
 ; for a distinction no consumer has asked for yet. One rule, until one does.
 ;
+; An `__enum` is a class here like a struct. Its `case` lines are not
+; captured, for the same reason a struct's fields are not.
+;
 ; Warning: `alias` is missing, and that is the grammar's doing. `alias Big = Int`
 ; parses as an ordinary `assignment`: nothing on the tree says the keyword was
 ; there, so there is nothing to match on. Giving `alias` a node of its own is a
@@ -19,6 +22,9 @@
   name: [(identifier) (backtick_identifier)] @name) @definition.function
 
 (struct_definition
+  name: [(identifier) (backtick_identifier)] @name) @definition.class
+
+(enum_definition
   name: [(identifier) (backtick_identifier)] @name) @definition.class
 
 (trait_definition

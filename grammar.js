@@ -20,27 +20,32 @@ const PREC = {
   // `:=` 比三元式還鬆（Mojo 的 `kAssignExpr` 就排在 `kIfElse` 下面一級，
   // `ParserBase.h:255-258`），所以它在這張表的最底下。
   walrus: 1,
-  conditional: 2,
-  or: 3,
-  and: 4,
-  not: 5,
-  compare: 6,
+  // `as` inside a pattern (Mojo's `kAsPat`, `ParserBase.h:262`, new in 1.2) sits
+  // between `:=` and the ternary: `6 | 7 as g` is `(6 | 7) as g`. A `with` item
+  // and an `except` clause keep their own `as`, because Mojo parses those at
+  // the ternary level, where `as` is not an operator.
+  as_pattern: 2,
+  conditional: 3,
+  or: 4,
+  and: 5,
+  not: 6,
+  compare: 7,
   // `var`／`ref` 當前綴的時候就在這一格（Mojo 的 `kVarRefPat`，排在 `kComparison`
   // 與 `kOr` 之間，`ParserBase.h:262-263`）。
-  var_ref_pat: 7,
-  bitwise_or: 8,
-  bitwise_xor: 9,
-  bitwise_and: 10,
-  shift: 11,
-  plus: 12,
-  times: 13,
-  unary: 14,
-  power: 15,
+  var_ref_pat: 8,
+  bitwise_or: 9,
+  bitwise_xor: 10,
+  bitwise_and: 11,
+  shift: 12,
+  plus: 13,
+  times: 14,
+  unary: 15,
+  power: 16,
   // `await` 擠在 `**` 與後綴鏈之間：`await a ** b` 是 `(await a) ** b`，而
   // `await f(x)` 是 `await (f(x))`——調用比它緊（Mojo 的 `kAwait` 就在 `kPrimary`
   // 下面一級，`ParserBase.h:253-280`）。
-  awaited: 16,
-  call: 17,
+  awaited: 17,
+  call: 18,
 };
 
 module.exports = grammar({
@@ -77,7 +82,10 @@ module.exports = grammar({
   // 裏面之前分不清是括號、元組還是生成器；`x: T` 在語句開頭分不清是標註賦值還是
   // 別的。tree-sitter 的辦法是在這裏點名，由它分兩路試。
   conflicts: ($) => [
-    [$.parenthesised_expression, $.tuple],
+    // `(x)` is a parenthesised expression or a one-element tuple. Since 1.2 a
+    // tuple's items are `_element` (an expression, `*rest` or `x as y`), so
+    // the pair is named through that rule.
+    [$.parenthesised_expression, $._element],
     [$.primary_expression, $.pattern],
     [$.tuple, $.tuple_pattern],
     [$.list, $.list_pattern],
@@ -125,6 +133,7 @@ module.exports = grammar({
         $.assignment,
         $.augmented_assignment,
         $.expression_statement,
+        $.enum_case,
       ),
 
     pass_statement: (_) => "pass",
@@ -265,42 +274,60 @@ module.exports = grammar({
     mlir_region_parameter: ($) =>
       seq(field("name", $._name), ":", field("type", $._expression)),
 
-    // `__match` 是 Mojo 自己那個模式匹配語句（`TokenKinds.def:171`：
-    // 「Experimental match statement」），不是 Python 的 `match`／`case`——那兩個詞
-    // Mojo 的記號表裏根本沒有。產生式照 `ParserStmts.cpp:1557-1560` 頭上那三行註釋：
+    // `match` is Mojo's pattern-matching statement, stable since 1.2: the
+    // token table has `match` as a keyword and keeps `__match` as the
+    // "Deprecated spelling of match" (`TokenKinds.def:137,171` at `mojo/v1.2.0`).
+    // It is not Python's `match`. The production is the comment above
+    // `parseMatchStmt` (`ParserStmts.cpp:1693-1695`):
     //
-    //     match_stmt ::= "__match" subject_expr ":" NEWLINE case_block+
-    //     case_block ::= "case" pattern ["as" 名] ["if" 表達式] ":" suite
+    //     match_stmt ::= "match" expression_list ":" NEWLINE case_block+
+    //     case_block ::= "case" pattern ["as" name] ["if" expression] ":" suite
     //
-    // Warning: case 的縮進有兩種，而且都要收（`ParserStmts.cpp:1604-1607` 那段註釋明說
-    // 了：「Cases may share the match indent (Mojo style) or be indented beneath it
-    // (Python style)」）。語料裏庫代碼走的是前一種（`layout/tile_tensor.mojo:190`
-    // 那三處），`statements/match_diags.mojo` 兩種都寫了。兩條路在詞法那一層就分開
-    // 了，不含糊：同深的下一行掃描器交 `_newline`，更深的交 `_indent`。
+    // The subject and each pattern are expression lists, so `match a, b:` and
+    // `case 1, 2:` are tuples without parentheses (`70b0edbd3b`). The
+    // `["as" name]` in that comment is no longer a slot of its own: the pattern
+    // is parsed at `kAsPat`, so `as` is an operator inside it (`as_pattern`).
+    // `comptime match` is the same statement behind `comptime`, see
+    // `comptime_statement`.
+    //
+    // Warning: cases come at either depth, and both are accepted
+    // (`ParserStmts.cpp:1766-1767`: "Cases may share the match indent (Mojo
+    // style) or be indented beneath it (Python style)"). In the 1.2
+    // sources, 316 match statements indent their cases and 133
+    // keep them level. The level ones are in three files, the parser's own
+    // `statements/match.mojo` and `match_diags.mojo` and one docs example; the
+    // stdlib and the kernels always indent. The two forms part at the lexer: a
+    // case at the same depth comes after `_newline`, a deeper one after
+    // `_indent`.
+    // Warning: `prec.right` is what lets one level case follow another. A
+    // `case` at the start of a line is also an `enum_case`, a statement of its
+    // own, so after a level case the next `case` could either continue the
+    // match or end it. Right associativity shifts, which keeps it in the match.
+    // An enum body never holds a match statement, so nothing is lost.
     match_statement: ($) =>
-      seq(
-        "__match",
-        field("subject", $._expression),
+      prec.right(seq(
+        choice("match", "__match"),
+        field("subject", $._expressions),
         ":",
         choice(
           seq($._newline, repeat1($.case_clause)),
           seq($._indent, repeat1($.case_clause), $._dedent),
         ),
-      ),
+      )),
 
-    // Warning: 模式不許是三元式。Mojo 解那個模式的時候把下限釘在
-    // `Precedence(int(kIfElse) + 1)`（`ParserStmts.cpp:1617`），就是為了讓後面那個
-    // `if` 歸守衛、不被當成 `x if y else z` 的開頭。`:=`（`kAssignExpr`）與 `as`
-    // （`kAsPat`）也在那條線以下，所以 `as` 是這裏明寫的一格，不是表達式裏的。
-    // `kBoolOr` 及以上全收——`case 1 | 2:`、`case n if n < 0:` 就靠這個。
-    // `case var x:`／`case ref x:` 走 `binding_pattern`（那兩個詞在 Mojo 是
-    // `kVarRefPat` 的前綴運算符，比 `kBoolOr` 緊）。
-    // Warning: 優先級比三元式高一級，不是隨手加的數。這一條就是「模式後面那個
-    // `if` 一定是守衛」那句話的寫法：`a or b` 收完之後看見 `if`，歸約成模式（這一條）
-    // 與移入三元式（`conditional_expression`，`PREC.conditional`）都通，而 Mojo 把
-    // 模式的下限釘在 `kIfElse + 1`，三元式在那條線以下，所以歸約贏。
+    // Warning: a pattern is never a ternary. Mojo parses a case pattern with
+    // `if` as a terminator (`ParserStmts.cpp:1780-1782`), so the `if` after a
+    // pattern is always the guard. The `prec` one rung above the ternary is
+    // that rule: after `n`, reducing to a pattern beats shifting `if` into a
+    // `conditional_expression`.
+    // `kBoolOr` and tighter are all patterns: `case 1 | 2:`, `case n if n < 0:`,
+    // `case == Int:` (a prefix `==`, see `unary_operator`). `case var x:` is a
+    // `binding_pattern`. `case x as y:` is an `as_pattern`, which in 1.2 is an
+    // operator of the pattern (`kAsPat`) and not a suffix of the case, so it
+    // nests: `case (0, 0) as origin:`, `case (6 | 7 as g), *h:`.
     _case_pattern: ($) =>
       prec(PREC.conditional + 1, choice(
+        $.as_pattern,
         $.boolean_operator,
         $.not_operator,
         $.comparison_operator,
@@ -308,14 +335,54 @@ module.exports = grammar({
         $.binding_pattern,
       )),
 
+    // `case 1, 2:` is a tuple, written as an `expression_list` like the
+    // subject of `match a, b:`. A trailing comma counts: `case perhaps, 6,:`
+    // is in the corpus. Items after the first may be `*rest`.
+    _case_patterns: ($) =>
+      choice(
+        $._case_pattern,
+        alias($._case_pattern_list, $.expression_list),
+      ),
+
+    _case_pattern_list: ($) =>
+      seq(
+        $._case_pattern,
+        choice(",", seq(repeat1(seq(",", choice($._case_pattern, $.splat_argument))), optional(","))),
+      ),
+
+    // `name` is a bare name: Mojo parses an expression there and rejects
+    // anything else (`case 0 as 1:` is a diagnostic test in
+    // `statements/match_diags.mojo`).
+    as_pattern: ($) =>
+      prec.left(
+        PREC.as_pattern,
+        seq(field("pattern", $._expression), "as", field("name", $._name)),
+      ),
+
     case_clause: ($) =>
       seq(
         "case",
-        field("pattern", $._case_pattern),
-        optional(seq("as", field("alias", $._name))),
+        field("pattern", $._case_patterns),
         optional(seq("if", field("guard", $._expression))),
         ":",
         field("body", $.block),
+      ),
+
+    // `if case`, `elif case` and `while case` test a pattern (new in 1.2,
+    // `8e6cfa75f8`, `8f0c263cd1`). The production is the comment above
+    // `parseWhileStmt` (`ParserStmts.cpp:1531-1532`), and `parseIf` reads the
+    // same shape (`ParserStmts.cpp:3821-3827`):
+    //
+    //     "case" pattern "=" assignment_expression
+    //
+    // The pattern is the same expression list a `case_clause` takes, and there
+    // is no guard: the `=` ends the pattern.
+    case_condition: ($) =>
+      seq(
+        "case",
+        field("pattern", $._case_patterns),
+        "=",
+        field("value", $._expression),
       ),
 
     // ---- import -----------------------------------------------------------
@@ -363,14 +430,21 @@ module.exports = grammar({
     // `comptime if` 與 `comptime for` 在編譯期展開，而語法上就是前面多一個詞
     // （`ParserStmts.cpp:935-953`：`comptime` 後面是 `assert`／`if`／`for` 三條路，
     // 都不是宣告）。只許出現在函數體裏——那是語義，這一層不管。
+    // `comptime match` joined them in 1.2 (`ParserStmts.cpp:985-990`).
     comptime_statement: ($) =>
-      seq("comptime", choice($.if_statement, $.for_statement)),
+      seq("comptime", choice($.if_statement, $.for_statement, $.match_statement)),
 
     // Warning: 被裝飾的是沒帶裝飾器的那一個。寫成「裝飾器 ＋ 任何複合語句」的話
     // `@a @b fn f` 兩種解釋都通——一個定義帶兩個裝飾器，還是一個裝飾器套着另一個
     // 帶裝飾器的定義——而那不是語言裏的歧義，是規則寫漏了一層。
     _definition: ($) =>
-      choice($.function_definition, $.struct_definition, $.trait_definition, $.extension_definition),
+      choice(
+        $.function_definition,
+        $.struct_definition,
+        $.enum_definition,
+        $.trait_definition,
+        $.extension_definition,
+      ),
 
     // 裝飾器的參數裏可以有反引號標識符：`@__llvm_metadata(`nvvm.cluster_dim`=x)`。
     // 那是 MLIR 的屬性名，帶點，照普通標識符的規矩寫不出來——語料裏這一族有四十多處。
@@ -398,9 +472,12 @@ module.exports = grammar({
     // 在簽名後面那個位置上收一個換行，而換行是外部記號，一交出來內部詞法器那一輪就
     // 不跑，GLR 也救不了。所以換行該不該交出來，由下一行的深度決定，在掃描器裏
     // 判（`src/scanner.c` 末尾那一句 `depth <= here`），這一層照寫 `$._newline` 就夠了。
+    // Warning: `__async` is the 1.2 spelling, and `async` still works. Mojo's
+    // lexer maps the old word onto the new token and warns
+    // (`Lexer.cpp:439`, `ParserBase.cpp:34-42`), so both are kept.
     function_definition: ($) =>
       seq(
-        optional("async"),
+        optional(choice("async", "__async")),
         field("kind", choice("fn", "def")),
         field("name", $._name),
         optional(field("type_parameters", $.type_parameters)),
@@ -477,6 +554,39 @@ module.exports = grammar({
         field("body", $.block),
       ),
 
+    // `__enum` is a struct whose state is declared by its cases (new in 1.2,
+    // `27eb5cf475`). Its head is the struct head: Mojo parses both in
+    // `parseStructStmt` (`ParserStmts.cpp:5156-5175`), so it takes the same
+    // parameters, conformances and `where` clauses. Its body is an ordinary
+    // block whose `case` lines are `enum_case` statements.
+    enum_definition: ($) =>
+      seq(
+        "__enum",
+        field("name", $._name),
+        optional(field("type_parameters", $.type_parameters)),
+        optional(field("traits", $.conformance_list)),
+        optional(field("constraints", $.where_clauses)),
+        ":",
+        field("body", $.block),
+      ),
+
+    // One case of an `__enum`, after the comment above `parseEnumCaseStmt`
+    // (`ParserStmts.cpp:5213`):
+    //
+    //     enum_case ::= "case" identifier ["(" expression ("," expression)* [","] ")"]
+    //
+    // It is a simple statement, so `case a; case b(Int)` and
+    // `__enum OneLine: case only` parse.
+    // Warning: this grammar takes `case x` as a statement anywhere. Mojo
+    // takes it only when the enclosing declaration is an enum
+    // (`ParserStmts.cpp:823-828`); a grammar has no enclosing declaration to
+    // ask, and a separate enum-only block would duplicate every statement
+    // rule. Outside an enum it is an error in Mojo and an `enum_case` here.
+    enum_case: ($) =>
+      seq("case", field("name", $._name), optional(field("payload", $.enum_payload))),
+
+    enum_payload: ($) => seq("(", commaSepTrailing($._expression), ")"),
+
     trait_definition: ($) =>
       seq(
         "trait",
@@ -538,14 +648,15 @@ module.exports = grammar({
     if_statement: ($) =>
       seq(
         "if",
-        field("condition", $._expression),
+        field("condition", $._condition),
         ":",
         field("consequence", $.block),
         repeat($.elif_clause),
         optional($.else_clause),
       ),
 
-    elif_clause: ($) => seq("elif", field("condition", $._expression), ":", field("consequence", $.block)),
+    elif_clause: ($) => seq("elif", field("condition", $._condition), ":", field("consequence", $.block)),
+    _condition: ($) => choice($._expression, $.case_condition),
     else_clause: ($) => seq("else", ":", field("body", $.block)),
 
     for_statement: ($) =>
@@ -560,7 +671,7 @@ module.exports = grammar({
       ),
 
     while_statement: ($) =>
-      seq("while", field("condition", $._expression), ":", field("body", $.block), optional($.else_clause)),
+      seq("while", field("condition", $._condition), ":", field("body", $.block), optional($.else_clause)),
 
     with_statement: ($) => seq("with", commaSep1($.with_item), ":", field("body", $.block)),
     with_item: ($) => seq($._expression, optional(seq("as", $.pattern))),
@@ -823,7 +934,12 @@ module.exports = grammar({
       );
     },
 
-    unary_operator: ($) => prec(PREC.unary, seq(choice("+", "-", "~"), $.primary_expression)),
+    // `==` is a prefix operator too, new in 1.2 (`ccd5c313bb`): `case == Int:`
+    // matches by equality rather than by shape. Mojo gives it the operand
+    // precedence of `-` (`kFactor`, `ParserExprs.cpp:485-486`) and accepts it
+    // wherever an expression starts (`isPrimaryExprStart`), so it is one more
+    // unary operator here.
+    unary_operator: ($) => prec(PREC.unary, seq(choice("+", "-", "~", "=="), $.primary_expression)),
 
     // `var` 和 `ref` 也是前綴運算符，與 `not`／`-`／`await` 同一族
     // （`ParserExprs.cpp:510-511` 那個 `switch` 裏它們就排在 `kw_not` 旁邊，優先級
@@ -840,7 +956,8 @@ module.exports = grammar({
     // `await` 在 Mojo 的優先級階梯上是 `kAwait`，比 `**` 還緊，只差 `kPrimary`
     // 一級（`ParserBase.h:253-280`）——所以 `await a ** b` 是 `(await a) ** b`，
     // `await a + await b` 是 `(await a) + (await b)`。
-    await_expression: ($) => prec(PREC.awaited, seq("await", $.primary_expression)),
+    // `__await` is the 1.2 spelling; `await` still lexes to the same token.
+    await_expression: ($) => prec(PREC.awaited, seq(choice("await", "__await"), $.primary_expression)),
 
 
     // 後綴 `^` 是所有權轉移（`consume(x^)`），Mojo 特有。
@@ -955,9 +1072,14 @@ module.exports = grammar({
 
     if_clause: ($) => seq("if", $._expression),
 
-    parenthesised_expression: ($) => seq("(", $._expression, ")"),
-    tuple: ($) => seq("(", optional(commaSepTrailing($._expression)), ")"),
-    list: ($) => seq("[", optional(commaSepTrailing($._expression)), "]"),
+    // Brackets take the two pattern-only forms, `*rest` and `x as y`, so a
+    // pattern can nest them: `case [first, *rest]:`, `case (0, 0) as p:` inside
+    // a tuple. Mojo parses both everywhere and rejects them outside a pattern
+    // afterwards; here they are admitted in brackets and in the top of a case.
+    parenthesised_expression: ($) => seq("(", choice($._expression, $.as_pattern), ")"),
+    tuple: ($) => seq("(", optional(commaSepTrailing($._element)), ")"),
+    list: ($) => seq("[", optional(commaSepTrailing($._element)), "]"),
+    _element: ($) => choice($._expression, $.as_pattern, $.splat_argument),
     // 大括號裏還能寫 `名 = 值`，那是初始化列表。Mojo 的擴展
     // （`ParserExprs.cpp:1029-1034`）：`{a, kwarg=42}` 在推得出類型的地方等於
     // `T(a, kwarg=42)`，語料裏 `alloc[Int8]({count = n})` 這一族就是它。
@@ -991,7 +1113,7 @@ module.exports = grammar({
     // 「能接着收就接着收」。
     function_type: ($) =>
       prec.right(seq(
-        optional("async"),
+        optional(choice("async", "__async")),
         field("kind", choice("def", "fn")),
         optional(field("type_parameters", $.type_parameters)),
         field("parameters", $.parameters),

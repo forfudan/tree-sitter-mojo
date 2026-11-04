@@ -9,13 +9,19 @@ A [tree-sitter](https://tree-sitter.github.io) grammar for
 Every other published Mojo grammar forks `tree-sitter-python`. A fork starts by
 assuming Python's answer everywhere and then hunting down the places Mojo differs —
 `fn` against `def`, parameter lists in `[]`, `owned`/`ref`/`out` argument conventions,
-`raises` and `capturing` on a signature, `__match`, t-strings, backtick identifiers.
+`raises` and `capturing` on a signature, `match` with cases level with it, `__enum`,
+t-strings, backtick identifiers.
 Each of those is a rule somebody has to notice is missing.
 
 This one reads the other way. Every rule is written against Mojo's own parser
-(`mojo/lib/MojoParser` in [modular/modular](https://github.com/modular/modular)) and
-checked against the `.mojo` files in that same repository — three and a half thousand
-of them, written by the people who designed the language.
+(`Mojo/lib/MojoParser` in [modular/modular](https://github.com/modular/modular)) and
+checked against the `.mojo` files in that same repository — nearly four thousand of
+them, written by the people who designed the language.
+
+It follows **Mojo 1.2** (tag `mojo/v1.2.0`): `match` and `comptime match`, `if case`,
+`elif case` and `while case`, `case == value`, `*rest` and `as` inside patterns, comma
+lists after `match` and `case`, `__enum` with its `case` members, and `__async`/`__await`.
+The older spellings (`__match`, `async`, `await`) still parse, as they do in Mojo.
 
 ## The number
 
@@ -28,18 +34,21 @@ That is the whole measure of this project: a rule is worth adding when it moves 
 number, and the grammar has drifted behind the language when the number falls. Point
 it at your own checkout with `MOJO_SRC=/path/to/modular`.
 
-It prints two figures. **Real Mojo is at 99.75%** (9 of 3585 files), and the whole
-corpus at 97.88% — the second is there so older numbers stay comparable.
+It prints two figures. On Mojo 1.2 (`mojo/v1.2.0`) **real Mojo is at 99.77%** (9 of
+3831 files fail), and the whole corpus at 98.09%; the second is there so older numbers
+stay comparable. On Mojo 1.1 (the 2026-09-17 tree) the same grammar is at 99.75% (9 of
+3585), as it was before the 1.2 rules went in.
 
-The difference is 193 files that are not Mojo, excluded by path pattern:
+The difference is 199 files that are not Mojo, excluded by path pattern:
 
-- **`mojo/tools/mblack/tests/data/`**, 116 files. `mojo/tools/mblack/` is Modular's
+- **`Mojo/tools/mblack/tests/data/`**, 116 files, matched without regard to case.
+  `Mojo/tools/mblack/` is Modular's
   fork of **Black**, the Python formatter, and that directory holds Black's own Python
   fixtures renamed in bulk to `.mojo` (`py_39/python39.mojo`, `pep_572_py39.mojo`).
   They use `class`, `match`/`case` and `yield`, none of which Mojo implements.
-- **the reference parser's negative tests**, 77 files ending in `errors.mojo` or
+- **the reference parser's negative tests**, 83 files ending in `errors.mojo` or
   `negative.mojo` *under a `test/` or `tests/` tree*. Modular's parser rejects them by
-  design. The qualifier is needed: `mojo/docs/site/code/manual/errors/`
+  design. The qualifier is needed: `Mojo/docs/site/code/manual/errors/`
   holds five real files whose names also end in `errors.mojo`.
 
 The nine that still fail are themselves files Modular's parser rejects (each carries
@@ -60,9 +69,13 @@ Read a fall in the number, not its distance from 100.
 
 ```
 npm install -g tree-sitter-cli
-tree-sitter generate
+tree-sitter generate --abi 15
 tree-sitter parse some.mojo
 ```
+
+Warning: keep `--abi 15`. The committed `parser.c` is ABI 15 so that the tree-sitter
+0.25 runtime (ABI 13 to 15) can load it; a CLI that defaults to a newer ABI would
+produce a parser that builds and then refuses to load.
 
 ## Licence
 

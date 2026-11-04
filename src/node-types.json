@@ -227,6 +227,60 @@
     }
   },
   {
+    "type": "as_pattern",
+    "named": true,
+    "fields": {
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "backtick_identifier",
+            "named": true
+          },
+          {
+            "type": "identifier",
+            "named": true
+          }
+        ]
+      },
+      "pattern": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "boolean_operator",
+            "named": true
+          },
+          {
+            "type": "comparison_operator",
+            "named": true
+          },
+          {
+            "type": "conditional_expression",
+            "named": true
+          },
+          {
+            "type": "lambda",
+            "named": true
+          },
+          {
+            "type": "named_expression",
+            "named": true
+          },
+          {
+            "type": "not_operator",
+            "named": true
+          },
+          {
+            "type": "primary_expression",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
     "type": "assert_statement",
     "named": true,
     "fields": {},
@@ -636,6 +690,14 @@
           "named": true
         },
         {
+          "type": "enum_case",
+          "named": true
+        },
+        {
+          "type": "enum_definition",
+          "named": true
+        },
+        {
           "type": "expression_statement",
           "named": true
         },
@@ -848,20 +910,6 @@
     "type": "case_clause",
     "named": true,
     "fields": {
-      "alias": {
-        "multiple": false,
-        "required": false,
-        "types": [
-          {
-            "type": "backtick_identifier",
-            "named": true
-          },
-          {
-            "type": "identifier",
-            "named": true
-          }
-        ]
-      },
       "body": {
         "multiple": false,
         "required": true,
@@ -911,6 +959,10 @@
         "required": true,
         "types": [
           {
+            "type": "as_pattern",
+            "named": true
+          },
+          {
             "type": "binding_pattern",
             "named": true
           },
@@ -920,6 +972,84 @@
           },
           {
             "type": "comparison_operator",
+            "named": true
+          },
+          {
+            "type": "expression_list",
+            "named": true
+          },
+          {
+            "type": "not_operator",
+            "named": true
+          },
+          {
+            "type": "primary_expression",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "case_condition",
+    "named": true,
+    "fields": {
+      "pattern": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "as_pattern",
+            "named": true
+          },
+          {
+            "type": "binding_pattern",
+            "named": true
+          },
+          {
+            "type": "boolean_operator",
+            "named": true
+          },
+          {
+            "type": "comparison_operator",
+            "named": true
+          },
+          {
+            "type": "expression_list",
+            "named": true
+          },
+          {
+            "type": "not_operator",
+            "named": true
+          },
+          {
+            "type": "primary_expression",
+            "named": true
+          }
+        ]
+      },
+      "value": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "boolean_operator",
+            "named": true
+          },
+          {
+            "type": "comparison_operator",
+            "named": true
+          },
+          {
+            "type": "conditional_expression",
+            "named": true
+          },
+          {
+            "type": "lambda",
+            "named": true
+          },
+          {
+            "type": "named_expression",
             "named": true
           },
           {
@@ -982,6 +1112,10 @@
         },
         {
           "type": "if_statement",
+          "named": true
+        },
+        {
+          "type": "match_statement",
           "named": true
         }
       ]
@@ -1137,6 +1271,14 @@
           },
           {
             "type": "delete_statement",
+            "named": true
+          },
+          {
+            "type": "enum_case",
+            "named": true
+          },
+          {
+            "type": "enum_definition",
             "named": true
           },
           {
@@ -1396,6 +1538,10 @@
             "named": true
           },
           {
+            "type": "case_condition",
+            "named": true
+          },
+          {
             "type": "comparison_operator",
             "named": true
           },
@@ -1450,6 +1596,135 @@
     }
   },
   {
+    "type": "enum_case",
+    "named": true,
+    "fields": {
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "backtick_identifier",
+            "named": true
+          },
+          {
+            "type": "identifier",
+            "named": true
+          }
+        ]
+      },
+      "payload": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "enum_payload",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "enum_definition",
+    "named": true,
+    "fields": {
+      "body": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "block",
+            "named": true
+          }
+        ]
+      },
+      "constraints": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "where_clauses",
+            "named": true
+          }
+        ]
+      },
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "backtick_identifier",
+            "named": true
+          },
+          {
+            "type": "identifier",
+            "named": true
+          }
+        ]
+      },
+      "traits": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "conformance_list",
+            "named": true
+          }
+        ]
+      },
+      "type_parameters": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "type_parameters",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "enum_payload",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "boolean_operator",
+          "named": true
+        },
+        {
+          "type": "comparison_operator",
+          "named": true
+        },
+        {
+          "type": "conditional_expression",
+          "named": true
+        },
+        {
+          "type": "lambda",
+          "named": true
+        },
+        {
+          "type": "named_expression",
+          "named": true
+        },
+        {
+          "type": "not_operator",
+          "named": true
+        },
+        {
+          "type": "primary_expression",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "except_clause",
     "named": true,
     "fields": {},
@@ -1501,6 +1776,14 @@
       "required": true,
       "types": [
         {
+          "type": "as_pattern",
+          "named": true
+        },
+        {
+          "type": "binding_pattern",
+          "named": true
+        },
+        {
           "type": "boolean_operator",
           "named": true
         },
@@ -1526,6 +1809,10 @@
         },
         {
           "type": "primary_expression",
+          "named": true
+        },
+        {
+          "type": "splat_argument",
           "named": true
         }
       ]
@@ -2179,6 +2466,10 @@
             "named": true
           },
           {
+            "type": "case_condition",
+            "named": true
+          },
+          {
             "type": "comparison_operator",
             "named": true
           },
@@ -2512,6 +2803,10 @@
       "required": false,
       "types": [
         {
+          "type": "as_pattern",
+          "named": true
+        },
+        {
           "type": "boolean_operator",
           "named": true
         },
@@ -2537,6 +2832,10 @@
         },
         {
           "type": "primary_expression",
+          "named": true
+        },
+        {
+          "type": "splat_argument",
           "named": true
         }
       ]
@@ -2622,6 +2921,10 @@
           },
           {
             "type": "conditional_expression",
+            "named": true
+          },
+          {
+            "type": "expression_list",
             "named": true
           },
           {
@@ -2802,6 +3105,14 @@
         },
         {
           "type": "delete_statement",
+          "named": true
+        },
+        {
+          "type": "enum_case",
+          "named": true
+        },
+        {
+          "type": "enum_definition",
           "named": true
         },
         {
@@ -3322,6 +3633,10 @@
       "multiple": false,
       "required": true,
       "types": [
+        {
+          "type": "as_pattern",
+          "named": true
+        },
         {
           "type": "boolean_operator",
           "named": true
@@ -3998,6 +4313,10 @@
       "required": false,
       "types": [
         {
+          "type": "as_pattern",
+          "named": true
+        },
+        {
           "type": "boolean_operator",
           "named": true
         },
@@ -4023,6 +4342,10 @@
         },
         {
           "type": "primary_expression",
+          "named": true
+        },
+        {
+          "type": "splat_argument",
           "named": true
         }
       ]
@@ -4182,6 +4505,10 @@
         "types": [
           {
             "type": "boolean_operator",
+            "named": true
+          },
+          {
+            "type": "case_condition",
             "named": true
           },
           {
@@ -4461,6 +4788,18 @@
     "named": false
   },
   {
+    "type": "__async",
+    "named": false
+  },
+  {
+    "type": "__await",
+    "named": false
+  },
+  {
+    "type": "__enum",
+    "named": false
+  },
+  {
     "type": "__extension",
     "named": false
   },
@@ -4627,6 +4966,10 @@
   },
   {
     "type": "lambda",
+    "named": false
+  },
+  {
+    "type": "match",
     "named": false
   },
   {

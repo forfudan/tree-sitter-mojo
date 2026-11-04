@@ -1,0 +1,88 @@
+// **`__async` and `__await` are the 1.2 spellings** (`b1bb00ad53`,
+// `c24fb9d37e`). Mojo's lexer still maps `async` onto the same token and warns
+// (`Lexer.cpp:439`, `ParserBase.cpp:34-42` at `mojo/v1.2.0`), so both spellings
+// parse, on a definition, on a function type and before an awaited value.
+
+================================================================================
+__async def and __await
+================================================================================
+
+__async def a() -> Int:
+    return __await b()
+
+--------------------------------------------------------------------------------
+
+(module
+  (function_definition
+    (identifier)
+    (parameters)
+    (identifier)
+    (block
+      (return_statement
+        (await_expression
+          (call
+            (identifier)
+            (argument_list)))))))
+
+================================================================================
+The old spellings still parse
+================================================================================
+
+async def c():
+    await d()
+
+--------------------------------------------------------------------------------
+
+(module
+  (function_definition
+    (identifier)
+    (parameters)
+    (block
+      (expression_statement
+        (await_expression
+          (call
+            (identifier)
+            (argument_list)))))))
+
+================================================================================
+__async on a function type
+================================================================================
+
+def e(f: __async def() -> Int):
+    pass
+
+--------------------------------------------------------------------------------
+
+(module
+  (function_definition
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (function_type
+          (parameters)
+          (identifier))))
+    (block
+      (pass_statement))))
+
+================================================================================
+__await binds tighter than a binary operator
+================================================================================
+
+__async def g() -> Int:
+    return __await x + __await y
+
+--------------------------------------------------------------------------------
+
+(module
+  (function_definition
+    (identifier)
+    (parameters)
+    (identifier)
+    (block
+      (return_statement
+        (binary_operator
+          (await_expression
+            (identifier))
+          (await_expression
+            (identifier)))))))

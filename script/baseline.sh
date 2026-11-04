@@ -13,7 +13,7 @@
 # 語料裏有一部分根本不是 Mojo，拿它們當分母只會把真實的進展壓扁。
 # 排除兩類（下面排除名單那兩條 grep 就是這兩類，按路徑形狀寫，不手列檔名）：
 #
-# 1. `mojo/tools/mblack/tests/data/` 底下的 117 個。`mojo/tools/mblack/` 是 Modular
+# 1. `Mojo/tools/mblack/tests/data/` 底下的 116 個。`mojo/tools/mblack/` 是 Modular
 #    對 Black（Python 的格式化工具）的分支，那個目錄是 Black 自己的 Python 測試
 #    固件整批改了擴展名——`py_39/python39.mojo`、`pep_572_py39.mojo` 這一類。裏面用的
 #    是 `class`／`match`-`case`／`yield`，Mojo 自己的解析器一個都不實現。
@@ -31,19 +31,26 @@ CORPUS=${MOJO_SRC:-$HOME/Programs/mojo}
 [ -d "$CORPUS" ] || { echo "找不到語料：$CORPUS（用 MOJO_SRC= 指一個）" >&2; exit 2; }
 
 cd "$HERE"
-tree-sitter generate >/dev/null
+# Warning: `--abi 15` is pinned on purpose. Downstream loads this parser with
+# the tree-sitter 0.25 runtime, which reads ABI 13 to 15. A newer CLI may default
+# to a newer ABI, and that parser.c would build and then refuse to load.
+tree-sitter generate --abi 15 >/dev/null
 all=$(mktemp); skip=$(mktemp); trap 'rm -f "$all" "$skip"' EXIT
 find "$CORPUS" -name '*.mojo' -not -path '*/.*' | sort > "$all"
 # 排除名單，按路徑形狀算出來。
+# Warning: the mblack match is case-insensitive. In git the directory is
+# `Mojo/tools/mblack/`; older checkouts on a case-insensitive disk spell it
+# `mojo/`. A case-sensitive grep would count the 116 Black fixtures of a fresh
+# clone as Mojo.
 {
-  grep -E '/mojo/tools/mblack/tests/data/' "$all" || true
+  grep -iE '/mojo/tools/mblack/tests/data/' "$all" || true
   grep -E '/(test|tests)/.*(errors|negative)\.mojo$' "$all" || true
 } | sort -u > "$skip"
 
 n_all=$(wc -l < "$all" | tr -d ' ')
 n_skip=$(wc -l < "$skip" | tr -d ' ')
 n_real=$((n_all - n_skip))
-n_mblack=$(grep -cE '/mojo/tools/mblack/tests/data/' "$skip" || true)
+n_mblack=$(grep -ciE '/mojo/tools/mblack/tests/data/' "$skip" || true)
 n_neg=$((n_skip - n_mblack))
 printf '語料：%s 個檔（%s）\n' "$n_all" "$CORPUS"
 printf '排除 %s 個：mblack 的 Python 固件 %s、參考解析器的負面測試 %s → 真實 Mojo %s 個\n' \

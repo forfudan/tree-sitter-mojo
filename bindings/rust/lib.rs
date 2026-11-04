@@ -28,7 +28,7 @@ mod tests {
         let query = tree_sitter::Query::new(&language, super::TAGS_QUERY).expect("tags.scm");
         let mut parser = tree_sitter::Parser::new();
         parser.set_language(&language).unwrap();
-        let source = "trait T:\n    fn show(self): ...\n\n@value\nstruct S(T):\n    fn show(self):\n        pass\n\nfn free():\n    pass\n";
+        let source = "trait T:\n    fn show(self): ...\n\n@value\nstruct S(T):\n    fn show(self):\n        pass\n\n__enum E:\n    case a\n    case b(Int)\n\nfn free():\n    pass\n";
         let tree = parser.parse(source, None).unwrap();
         let names: Vec<&str> = query
             .capture_names()
@@ -49,7 +49,7 @@ mod tests {
             }
         }
         found.sort();
-        assert_eq!(found, ["S", "T", "free", "show", "show"], "每一個定義都捕到了");
+        assert_eq!(found, ["E", "S", "T", "free", "show", "show"], "every definition is captured, the enum too");
     }
 
     #[test]

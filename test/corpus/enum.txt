@@ -1,0 +1,217 @@
+// **`__enum` is a struct whose state is declared by its cases**, new in Mojo
+// 1.2 (`27eb5cf475`). Its head is the struct head (`parseStructStmt` parses
+// both, `ParserStmts.cpp:5156-5175` at `mojo/v1.2.0`). A case is
+// `"case" name ["(" types ")"]` (`parseEnumCaseStmt`, `ParserStmts.cpp:5213`),
+// a simple statement, so `;` joins two and a one-line body holds one. The
+// shapes are the ones `decls/enum_decls.mojo` exercises.
+
+================================================================================
+Cases with and without a payload, beside methods
+================================================================================
+
+__enum Color(Copyable):
+    """Colours."""
+    case red
+    case rgb(Int, Int, Int)
+    comptime N = 3
+
+    def is_red(self) -> Bool:
+        match self:
+            case .red:
+                return True
+            case _:
+                return False
+
+--------------------------------------------------------------------------------
+
+(module
+  (enum_definition
+    (identifier)
+    (conformance_list
+      (conformance
+        (identifier)))
+    (block
+      (expression_statement
+        (string))
+      (enum_case
+        (identifier))
+      (enum_case
+        (identifier)
+        (enum_payload
+          (identifier)
+          (identifier)
+          (identifier)))
+      (assignment
+        (pattern
+          (identifier))
+        (integer))
+      (function_definition
+        (identifier)
+        (parameters
+          (parameter
+            (identifier)))
+        (identifier)
+        (block
+          (match_statement
+            (identifier)
+            (case_clause
+              (dot_member
+                (identifier))
+              (block
+                (return_statement
+                  (true))))
+            (case_clause
+              (identifier)
+              (block
+                (return_statement
+                  (false))))))))))
+
+================================================================================
+Parameters, conformances and a where clause
+================================================================================
+
+__enum Bounded[n: Int](Movable) where n > 0:
+    case a(Self.T)
+    case b
+
+--------------------------------------------------------------------------------
+
+(module
+  (enum_definition
+    (identifier)
+    (type_parameters
+      (parameter
+        (identifier)
+        (identifier)))
+    (conformance_list
+      (conformance
+        (identifier)))
+    (where_clauses
+      (where_clause
+        (comparison_operator
+          (identifier)
+          (integer))))
+    (block
+      (enum_case
+        (identifier)
+        (enum_payload
+          (attribute
+            (identifier)
+            (identifier))))
+      (enum_case
+        (identifier)))))
+
+================================================================================
+Two cases on a line, a trailing comma, a payload over lines
+================================================================================
+
+__enum Spellings:
+    case a; case b(Int)
+    case trailing_comma(Int, Bool,)
+    case multi_line(
+        Int,
+        Bool,
+    )
+    case `def`
+
+--------------------------------------------------------------------------------
+
+(module
+  (enum_definition
+    (identifier)
+    (block
+      (enum_case
+        (identifier))
+      (enum_case
+        (identifier)
+        (enum_payload
+          (identifier)))
+      (enum_case
+        (identifier)
+        (enum_payload
+          (identifier)
+          (identifier)))
+      (enum_case
+        (identifier)
+        (enum_payload
+          (identifier)
+          (identifier)))
+      (enum_case
+        (backtick_identifier)))))
+
+================================================================================
+A one-line body, and a decorator
+================================================================================
+
+__enum OneLine: case only
+
+@fieldwise_init
+__enum Decorated:
+    case x
+
+--------------------------------------------------------------------------------
+
+(module
+  (enum_definition
+    (identifier)
+    (block
+      (enum_case
+        (identifier))))
+  (decorated_definition
+    (decorator
+      (identifier))
+    (enum_definition
+      (identifier)
+      (block
+        (enum_case
+          (identifier))))))
+
+================================================================================
+A level match right before the next method
+================================================================================
+
+__enum E:
+    case a
+
+    def f(self):
+        match self:
+        case .a:
+            pass
+        case _:
+            pass
+
+    def g(self):
+        pass
+
+--------------------------------------------------------------------------------
+
+(module
+  (enum_definition
+    (identifier)
+    (block
+      (enum_case
+        (identifier))
+      (function_definition
+        (identifier)
+        (parameters
+          (parameter
+            (identifier)))
+        (block
+          (match_statement
+            (identifier)
+            (case_clause
+              (dot_member
+                (identifier))
+              (block
+                (pass_statement)))
+            (case_clause
+              (identifier)
+              (block
+                (pass_statement))))))
+      (function_definition
+        (identifier)
+        (parameters
+          (parameter
+            (identifier)))
+        (block
+          (pass_statement))))))

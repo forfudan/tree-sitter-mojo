@@ -1,0 +1,210 @@
+// **`if case`, `elif case` and `while case` test a pattern**, new in Mojo 1.2
+// (`8e6cfa75f8`, `8f0c263cd1`). The production is the comment above
+// `parseWhileStmt` (`ParserStmts.cpp:1531-1532` at `mojo/v1.2.0`):
+//
+//     "case" pattern "=" assignment_expression
+//
+// The pattern is the same expression list a `case_clause` takes, so the
+// `case_condition` node holds the same kinds of patterns. There is no guard:
+// the `=` ends the pattern.
+
+================================================================================
+if case, elif case and else
+================================================================================
+
+def f(v: Optional[Int]):
+    if case .Some(x) = v:
+        print(x)
+    elif case .None = v:
+        pass
+    else:
+        pass
+
+--------------------------------------------------------------------------------
+
+(module
+  (function_definition
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (subscript
+          (identifier)
+          (identifier))))
+    (block
+      (if_statement
+        (case_condition
+          (call
+            (dot_member
+              (identifier))
+            (argument_list
+              (identifier)))
+          (identifier))
+        (block
+          (expression_statement
+            (call
+              (identifier)
+              (argument_list
+                (identifier)))))
+        (elif_clause
+          (case_condition
+            (dot_member
+              (identifier))
+            (identifier))
+          (block
+            (pass_statement)))
+        (else_clause
+          (block
+            (pass_statement)))))))
+
+================================================================================
+while case, with an else
+================================================================================
+
+def f(var it: Iter):
+    while case .Some(x) = it.next():
+        use(x)
+    else:
+        pass
+
+--------------------------------------------------------------------------------
+
+(module
+  (function_definition
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (identifier)))
+    (block
+      (while_statement
+        (case_condition
+          (call
+            (dot_member
+              (identifier))
+            (argument_list
+              (identifier)))
+          (call
+            (attribute
+              (identifier)
+              (identifier))
+            (argument_list)))
+        (block
+          (expression_statement
+            (call
+              (identifier)
+              (argument_list
+                (identifier)))))
+        (else_clause
+          (block
+            (pass_statement)))))))
+
+================================================================================
+comptime if case
+================================================================================
+
+def f[q: Optional[Int]]():
+    comptime if case .Some(e) = q:
+        pass
+
+--------------------------------------------------------------------------------
+
+(module
+  (function_definition
+    (identifier)
+    (type_parameters
+      (parameter
+        (identifier)
+        (subscript
+          (identifier)
+          (identifier))))
+    (parameters)
+    (block
+      (comptime_statement
+        (if_statement
+          (case_condition
+            (call
+              (dot_member
+                (identifier))
+              (argument_list
+                (identifier)))
+            (identifier))
+          (block
+            (pass_statement)))))))
+
+================================================================================
+A case condition takes a comma list and as
+================================================================================
+
+def f(pair: Tuple[Int, Int]):
+    if case (a, 0) as p = pair:
+        pass
+    if case 1, b = pair:
+        pass
+
+--------------------------------------------------------------------------------
+
+(module
+  (function_definition
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (subscript
+          (identifier)
+          (identifier)
+          (identifier))))
+    (block
+      (if_statement
+        (case_condition
+          (as_pattern
+            (tuple
+              (identifier)
+              (integer))
+            (identifier))
+          (identifier))
+        (block
+          (pass_statement)))
+      (if_statement
+        (case_condition
+          (expression_list
+            (integer)
+            (identifier))
+          (identifier))
+        (block
+          (pass_statement))))))
+
+================================================================================
+A plain condition is unchanged
+================================================================================
+
+def f(x: Int):
+    if x == 0:
+        pass
+    while x := next():
+        pass
+
+--------------------------------------------------------------------------------
+
+(module
+  (function_definition
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (identifier)))
+    (block
+      (if_statement
+        (comparison_operator
+          (identifier)
+          (integer))
+        (block
+          (pass_statement)))
+      (while_statement
+        (named_expression
+          (identifier)
+          (call
+            (identifier)
+            (argument_list)))
+        (block
+          (pass_statement))))))
